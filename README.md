@@ -98,4 +98,4 @@ Hãy thoải mái tạo Pull Request hoặc mở một Issue mới nếu bạn p
 
 ## 📄 Giấy phép (License)
 
-Dự án này được phân phối dưới giấy phép **MIT**. Xem file \`LICENSE\` để biết thêm thông tin.
+Dự án này được phân phối dưới giấy phép **MIT**. Xem file `LICENSE` để biết thêm thông tin.

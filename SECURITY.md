@@ -11,7 +11,7 @@ Hiện tại, dự án chỉ hỗ trợ bản cập nhật trên nhánh `main` m
 
 ## Báo cáo Lỗ hổng Bảo mật (Reporting a Vulnerability)
 
-An toàn và bảo mật là ưu tiên hàng đầu của chúng tôi. Nếu bạn phát hiện ra bất kỳ lỗ hổng bảo mật nào trong mã nguồn của Celeb Locket Tracker (ví dụ: rò rỉ token, bypass xác thực, lộ lọt dữ liệu nhạy cảm), vui lòng **KHÔNG** tạo một Issue công khai.
+An toàn và bảo mật là ưu tiên hàng đầu của chúng tôi. Nếu bạn phát hiện ra bất kỳ lỗ hổng bảo mật nào trong mã nguồn của Celeb Tracker (ví dụ: rò rỉ token, bypass xác thực, lộ lọt dữ liệu nhạy cảm), vui lòng **KHÔNG** tạo một Issue công khai.
 
 Thay vào đó, hãy thực hiện theo các bước sau để báo cáo an toàn:
 
