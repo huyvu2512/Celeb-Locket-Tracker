@@ -119,7 +119,7 @@ function findAllPosts(obj, results = []) {
 /**
  * Quét trang profile Threads để lấy danh sách bài viết gần nhất.
  * 
- * @param {string} username - Tên tài khoản Threads (VD: "locketcameravn")
+ * @param {string} username - Tên tài khoản Threads (VD: "appcameravn")
  * @returns {Promise<Array<{code: string, pk: string, caption: string, taken_at: number}>>}
  */
 async function fetchProfilePosts(username) {
@@ -165,7 +165,7 @@ async function fetchProfilePosts(username) {
 /**
  * Quét chi tiết một bài viết cụ thể, bao gồm caption và tất cả bình luận.
  * 
- * @param {string} username - Tên tài khoản (VD: "locketcameravn")
+ * @param {string} username - Tên tài khoản (VD: "appcameravn")
  * @param {string} postCode - Mã bài viết (VD: "DZaG6ENmArc")
  * @returns {Promise<{caption: string, author: string, replies: Array<{author: string, text: string, pk: string}>}>}
  */

@@ -1,4 +1,4 @@
-name: Celeb Locket Tracker
+name: Celeb-Tracker
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   track:
-    name: Cập nhập dữ liệu Celeb Locket Tracker
+    name: Cập nhập dữ liệu Celeb-Tracker
     runs-on: ubuntu-latest
     permissions:
       contents: write  # Cần quyền push commit
@@ -32,8 +32,8 @@ jobs:
 
       - name: Commit và Push nếu có thay đổi
         run: |
-          git config user.name "Celeb Locket Bot"
-          git config user.email "bot@celeb-locket-tracker.github.io"
+          git config user.name "Celeb Celeb-Tracker Bot"
+          git config user.email "bot@celeb-Celeb-Tracker-tracker.github.io"
           git add data/celebs.json data/scan_state.json
           if git diff --staged --quiet; then
             echo "Không có thay đổi nào cần commit."

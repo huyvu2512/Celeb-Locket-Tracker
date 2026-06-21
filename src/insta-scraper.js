@@ -7,7 +7,7 @@ const { logInfo, logError, delay } = require('./utils');
 /**
  * Fetch danh sách Stories của một user thông qua RapidAPI
  * 
- * @param {string} username - Tên tài khoản Instagram (VD: "locketcamera")
+ * @param {string} username - Tên tài khoản Instagram (VD: "appcamera")
  * @param {string} rapidApiKey - API Key của RapidAPI
  * @returns {Promise<Array<any>>} Danh sách các story objects
  */

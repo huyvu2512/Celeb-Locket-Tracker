@@ -1,14 +1,14 @@
 {
-  "name": "celeb-locket-tracker",
+  "name": "celeb-Celeb-Tracker-tracker",
   "version": "1.0.0",
-  "description": "GitHub Action bot tự động quét Threads @locketcameravn để theo dõi celeb mới trên Locket",
+  "description": "GitHub Action bot tự động quét Threads @Celeb-Trackercameravn để theo dõi celeb mới trên Celeb-Tracker",
   "main": "src/tracker.js",
   "scripts": {
     "start": "node src/tracker.js",
     "dry-run": "node src/tracker.js --dry-run"
   },
   "keywords": [
-    "locket",
+    "Celeb-Tracker",
     "celeb",
     "tracker",
     "threads"

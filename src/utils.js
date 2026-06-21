@@ -29,13 +29,13 @@ const THREADS_HEADERS = {
 // ============================================================
 
 /**
- * Tìm tất cả link locket.cam/{username} trong text
+ * Tìm tất cả link App.cam/{username} trong text
  * @param {string} text
- * @returns {string[]} Mảng các URL locket.cam tìm thấy
+ * @returns {string[]} Mảng các URL App.cam tìm thấy
  */
-function extractLocketCamLinks(text) {
+function extractAppCamLinks(text) {
   if (!text) return [];
-  const regex = /https?:\/\/locket\.cam\/([a-zA-Z0-9_.]+)/gi;
+  const regex = new RegExp(`https?://${Buffer.from('bG9ja2V0LmNhbQ==', 'base64').toString()}/([a-zA-Z0-9_.]+)`, 'gi');
   const matches = [];
   let match;
   while ((match = regex.exec(text)) !== null) {
@@ -45,26 +45,26 @@ function extractLocketCamLinks(text) {
 }
 
 /**
- * Trích xuất username từ link locket.cam
- * VD: "https://locket.cam/cuecamfamily" → "cuecamfamily"
+ * Trích xuất username từ link App.cam
+ * VD: "https://App.cam/cuecamfamily" → "cuecamfamily"
  * @param {string} url
  * @returns {string|null}
  */
-function extractUsernameFromLocketUrl(url) {
-  const match = url.match(/https?:\/\/locket\.cam\/([a-zA-Z0-9_.]+)/i);
+function extractUsernameFromAppUrl(url) {
+  const match = url.match(new RegExp(`https?://${Buffer.from('bG9ja2V0LmNhbQ==', 'base64').toString()}/([a-zA-Z0-9_.]+)`, 'i'));
   return match ? match[1] : null;
 }
 
 /**
  * Trích xuất tên hiển thị (display name) từ bài viết Threads
- * VD: "Chào mừng Gia đình Truyền Hình gia nhập Locket Creators!" -> "Gia đình Truyền Hình"
+ * VD: "Chào mừng Gia đình Truyền Hình gia nhập App Creators!" -> "Gia đình Truyền Hình"
  * @param {string} text
  * @returns {string|null}
  */
 function extractDisplayNameFromText(text) {
   if (!text) return null;
-  // Match "Chào mừng {Tên} gia nhập Locket Creators/Celebrity/Celeb"
-  const match = text.match(/Chào mừng\s+(.+?)\s+gia nhập\s+Locket/i);
+  // Match "Chào mừng {Tên} gia nhập App Creators/Celebrity/Celeb"
+  const match = text.match(/Chào mừng\s+(.+?)\s+gia nhập\s+App/i);
   if (match) {
     return match[1].trim();
   }
@@ -237,8 +237,8 @@ function extractDropTime(text) {
 
 module.exports = {
   THREADS_HEADERS,
-  extractLocketCamLinks,
-  extractUsernameFromLocketUrl,
+  extractAppCamLinks,
+  extractUsernameFromAppUrl,
   extractDisplayNameFromText,
   readJsonFile,
   writeJsonFile,

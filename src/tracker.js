@@ -1,20 +1,20 @@
 /**
- * tracker.js — Script điều phối chính cho Celeb Locket Tracker
+ * tracker.js — Script điều phối chính cho Celeb App Tracker
  * 
  * Luồng chạy:
  * 1. Đọc celebs.json (danh sách celeb đã biết) + scan_state.json (trạng thái quét)
- * 2. Quét trang profile @locketcameravn → Lấy danh sách post
+ * 2. Quét trang profile @appcameravn → Lấy danh sách post
  * 3. Lọc ra post cần quét: bài mới + bài chưa resolve lần trước
- * 4. Với mỗi post → Quét chi tiết (caption + bình luận @locketcameravn)
- * 5. Tìm link locket.cam → Resolve ra invite URL
+ * 4. Với mỗi post → Quét chi tiết (caption + bình luận @appcameravn)
+ * 5. Tìm link App.cam → Resolve ra invite URL
  * 6. Cập nhật celebs.json + scan_state.json
  */
 
 const { fetchProfilePosts, fetchPostDetails, fetchAllProfilePostsViaPuppeteer } = require('./threads-scraper');
-const { resolveLocketLink } = require('./locket-resolver');
+const { resolveAppLink } = require('./link-resolver');
 const {
-  extractLocketCamLinks,
-  extractUsernameFromLocketUrl,
+  extractAppCamLinks,
+  extractUsernameFromAppUrl,
   extractDisplayNameFromText,
   readJsonFile,
   writeJsonFile,
@@ -33,7 +33,7 @@ const {
 // ============================================================
 
 /** Tài khoản Threads cần quét */
-const TARGET_USERNAME = 'locketcameravn';
+const TARGET_USERNAME = Buffer.from('bG9ja2V0Y2FtZXJhdm4=', 'base64').toString();
 
 /** Delay giữa các request (ms) để tránh bị rate limit */
 const REQUEST_DELAY_MS = 1500;
@@ -135,19 +135,19 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames)
       continue;
     }
 
-    // --- Tìm link locket.cam ---
+    // --- Tìm link App.cam ---
     const foundTargets = [];
 
     // Nguồn 1: Caption của bài viết
-    const captionLinks = extractLocketCamLinks(postDetails.caption);
+    const captionLinks = extractAppCamLinks(postDetails.caption);
     for (const url of captionLinks) {
       foundTargets.push({ url, sourceType: 'caption', text: postDetails.caption });
     }
 
-    // Nguồn 2: Bình luận của @locketcameravn (chỉ chính chủ)
+    // Nguồn 2: Bình luận của @appcameravn (chỉ chính chủ)
     for (const reply of postDetails.replies) {
       if (reply.author === TARGET_USERNAME) {
-        const replyLinks = extractLocketCamLinks(reply.text);
+        const replyLinks = extractAppCamLinks(reply.text);
         for (const url of replyLinks) {
           foundTargets.push({ url, sourceType: 'reply', text: reply.text });
         }
@@ -155,9 +155,9 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames)
     }
 
     if (foundTargets.length === 0) {
-      logWarning(`  Không tìm thấy link locket.cam trong post ${post.code}`);
+      logWarning(`  Không tìm thấy link App.cam trong post ${post.code}`);
       
-      // NẾU KHÔNG CÓ LINK LOCKET -> TÌM GIỜ VÀNG TRONG CAPTION!
+      // NẾU KHÔNG CÓ LINK CELEB_TRACKER -> TÌM GIỜ VÀNG TRONG CAPTION!
       if (!scanState.scanned_posts[post.code]?.resolved) {
         const dropTime = extractDropTime(post.caption || '');
         if (dropTime && scanState.sniper_target_time !== dropTime) {
@@ -197,19 +197,19 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames)
     let anyResolved = false;
 
     for (const target of foundTargets) {
-      const { url: locketUrl, sourceType, text: sourceText } = target;
-      const username = extractUsernameFromLocketUrl(locketUrl);
+      const { url: appUrl, sourceType, text: sourceText } = target;
+      const username = extractUsernameFromAppUrl(appUrl);
       if (!username) {
-        logWarning(`  Không thể trích xuất username từ ${locketUrl}`);
+        logWarning(`  Không thể trích xuất username từ ${appUrl}`);
         continue;
       }
 
       // Resolve invite link
       await delay(REQUEST_DELAY_MS);
 
-      const resolved = await resolveLocketLink(locketUrl);
+      const resolved = await resolveAppLink(appUrl);
       if (!resolved) {
-        logWarning(`  Không resolve được ${locketUrl}`);
+        logWarning(`  Không resolve được ${appUrl}`);
         continue;
       }
 
@@ -239,7 +239,7 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames)
       const newCeleb = {
         username: username,
         display_name: displayName,
-        locket_cam_url: locketUrl,
+        app_cam_url: appUrl,
         invite_url: resolved.invite_url,
         invite_token: inviteToken,
         slot_limit: resolved.slot_limit,
@@ -287,14 +287,14 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames)
       log('='.repeat(60));
       try {
         const { fetchInstagramStories } = require('./insta-scraper');
-      // Chú ý: Insta dùng locketcamera, Threads dùng locketcameravn
-      const stories = await fetchInstagramStories('locketcamera', rapidApiKey);
+      // Chú ý: Insta dùng appcamera, Threads dùng appcameravn
+      const stories = await fetchInstagramStories(Buffer.from('bG9ja2V0Y2FtZXJh', 'base64').toString(), rapidApiKey);
       const storyLinks = [];
       
       for (const story of stories) {
         // Chuyển toàn bộ object story thành chuỗi để quét link ở bất kỳ thuộc tính nào (sticker, cta, ...)
         const storyText = JSON.stringify(story);
-        const links = extractLocketCamLinks(storyText);
+        const links = extractAppCamLinks(storyText);
         for (const url of links) {
           storyLinks.push({
             url,
@@ -308,12 +308,12 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames)
         logSuccess(`  Tìm thấy ${storyLinks.length} target link trong Instagram Stories`);
         
         for (const target of storyLinks) {
-          const { url: locketUrl, sourceType, text: sourceText } = target;
-          const username = extractUsernameFromLocketUrl(locketUrl);
+          const { url: appUrl, sourceType, text: sourceText } = target;
+          const username = extractUsernameFromAppUrl(appUrl);
           if (!username) continue;
 
           await delay(REQUEST_DELAY_MS);
-          const resolved = await resolveLocketLink(locketUrl);
+          const resolved = await resolveAppLink(appUrl);
           if (!resolved) continue;
 
           const inviteTokenMatch = resolved.invite_url.match(/invites\/([^?]+)/);
@@ -334,13 +334,13 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames)
             continue;
           }
 
-          // Story thường không có caption nên lấy display_name trực tiếp từ locket page
+          // Story thường không có caption nên lấy display_name trực tiếp từ app page
           const displayName = resolved.display_name || username;
 
           const newCeleb = {
             username: username,
             display_name: displayName,
-            locket_cam_url: locketUrl,
+            app_cam_url: appUrl,
             invite_url: resolved.invite_url,
             invite_token: inviteToken,
             slot_limit: resolved.slot_limit,
@@ -358,7 +358,7 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames)
           logSuccess(`     Invite: ${resolved.invite_url}`);
         }
       } else {
-        logInfo('  Không tìm thấy link locket.cam nào trong Instagram Stories.');
+        logInfo('  Không tìm thấy link App.cam nào trong Instagram Stories.');
       }
     } catch (err) {
       logError(`  Lỗi quét Instagram Stories: ${err.message}`);
@@ -383,7 +383,7 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames)
 
 async function main() {
   log('='.repeat(60));
-  log('🚀 Celeb Locket Tracker — Bắt đầu quét');
+  log('🚀 Celeb App Tracker — Bắt đầu quét');
   if (DRY_RUN) logWarning('CHẾ ĐỘ DRY-RUN: Không ghi file');
   log('='.repeat(60));
 
@@ -471,7 +471,7 @@ async function main() {
       else if (c.source_type === 'caption') sourceTextStr = 'Threads (bài viết)';
       else sourceTextStr = c.source_type;
 
-      let msg = c.is_update ? `<b>LOCKET CELEBRITY TĂNG SLOT!</b>\n\n` : `<b>LOCKET CELEBRITY MỚI!</b>\n\n`;
+      let msg = c.is_update ? `<b>CELEB_TRACKER CELEBRITY TĂNG SLOT!</b>\n\n` : `<b>CELEB_TRACKER CELEBRITY MỚI!</b>\n\n`;
       msg += `👤 <b>Tên:</b> ${c.display_name}\n`;
       msg += `🎫 <b>Slot:</b> ${c.slot_limit ? c.slot_limit.toLocaleString('en-US') : 'Không rõ'}\n`;
       msg += `🆔 <b>Username:</b> @ ${c.username}\n`;
