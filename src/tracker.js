@@ -126,7 +126,6 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames)
       // Đánh dấu chưa resolve để quét lại lần sau
       scanState.scanned_posts[post.code] = {
         resolved: false,
-        scanned_at: new Date().toISOString(),
         error: err.message,
       };
       continue;
@@ -181,8 +180,7 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames)
       }
 
       scanState.scanned_posts[post.code] = {
-        resolved: false,
-        scanned_at: new Date().toISOString(),
+        resolved: true,
       };
       continue;
     }
@@ -259,7 +257,6 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames)
     // Cập nhật trạng thái post
     scanState.scanned_posts[post.code] = {
       resolved: anyResolved,
-      scanned_at: new Date().toISOString(),
     };
   }
 
@@ -446,7 +443,6 @@ async function main() {
   // ----------------------------------------------------------
   // 6. Sắp xếp & Lưu dữ liệu
   // ----------------------------------------------------------
-  scanState.last_scan = new Date().toISOString();
 
   // Sắp xếp celebs mới nhất lên đầu tiên
   celebs.sort((a, b) => new Date(b.found_at) - new Date(a.found_at));
@@ -455,8 +451,6 @@ async function main() {
   log('='.repeat(60));
   if (newCelebsFound > 0) {
     logSuccess(`Tổng cộng tìm thấy ${newCelebsFound} celeb mới!`);
-    
-    // Soạn và gửi thông báo Telegram
     for (const c of newlyFoundCelebs) {
       // Chuyển đổi định dạng thời gian cho đẹp
       const d = new Date(c.found_at);
