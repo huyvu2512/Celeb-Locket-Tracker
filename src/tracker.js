@@ -426,8 +426,13 @@ async function main() {
           scanState.sniper_completed = true; // Đánh dấu hoàn thành
           break;
         }
-        logInfo(`  -> Chưa thấy link. Chờ 5 giây rồi quét lại...`);
-        await delay(5000); // Rình 5 giây 1 lần
+        const minutesPassed = 60 - ((sniperEndTime - Date.now()) / (60 * 1000));
+        if (minutesPassed <= 10) {
+          logInfo(`  -> [10p đầu] Chưa thấy link. Spam quét lại NGAY LẬP TỨC...`);
+        } else {
+          logInfo(`  -> Chưa thấy link. Chờ 5 giây rồi quét lại...`);
+          await delay(5000); // Rình 5 giây 1 lần
+        }
       }
 
       if (!scanState.sniper_completed) {
