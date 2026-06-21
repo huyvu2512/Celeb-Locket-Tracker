@@ -26,6 +26,8 @@ jobs:
           RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          L_DIO_EMAIL: ${{ secrets.L_DIO_EMAIL }}
+          L_DIO_PASSWORD: ${{ secrets.L_DIO_PASSWORD }}
         run: |
           npm install
           node src/tracker.js

@@ -460,6 +460,12 @@ async function main() {
   log('='.repeat(60));
   if (newCelebsFound > 0) {
     logSuccess(`Tổng cộng tìm thấy ${newCelebsFound} celeb mới!`);
+    let autoAddResults = null;
+    if (!isDryRun) {
+      const { autoAddFriends } = require('./auto-adder');
+      autoAddResults = await autoAddFriends(newlyFoundCelebs);
+    }
+
     for (const c of newlyFoundCelebs) {
       // Chuyển đổi định dạng thời gian cho đẹp
       const d = new Date(c.found_at);
@@ -480,6 +486,16 @@ async function main() {
       }
       msg += `⏱ <b>Thời gian:</b> ${timeStr}\n`;
       msg += `📍 <b>Nguồn:</b> ${sourceTextStr}\n`;
+      
+      if (autoAddResults) {
+        if (autoAddResults.success.includes(c.username)) {
+           msg += `🤖 <b>Bot Auto-Add:</b> ✅ Đã kết bạn thành công!\n`;
+        } else if (autoAddResults.full.includes(c.username)) {
+           msg += `🤖 <b>Bot Auto-Add:</b> ❌ Thất bại (Locket báo Full 100%)\n`;
+        } else if (autoAddResults.error.includes(c.username)) {
+           msg += `🤖 <b>Bot Auto-Add:</b> ⚠️ Gặp lỗi tự động thêm bạn\n`;
+        }
+      }
       
       const replyMarkup = {
         inline_keyboard: [
