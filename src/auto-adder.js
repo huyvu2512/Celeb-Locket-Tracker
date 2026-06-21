@@ -103,37 +103,53 @@ async function autoAddFriends(newCelebs) {
           }
         });
 
-        // Đợi kết quả
+        // Đợi kết quả hiển thị
         try {
           await page.waitForFunction(() => {
             const text = document.body.textContent;
-            return text.includes('Theo dõi') || text.includes('Đang chờ chấp nhận');
+            return text.includes('Theo dõi') || text.includes('Đang chờ chấp nhận') || text.includes('Bạn bè') || text.includes('Đang xếp hàng');
           }, { timeout: 15000 });
         } catch (e) {
-          logError(`❌ Không tìm thấy nút Theo dõi cho ${celeb.username}. Bỏ qua.`);
+          logError(`❌ Không tìm thấy thông tin trên trang cho ${celeb.username}. Bỏ qua.`);
           results.error.push(celeb.username);
           continue; // Sang celeb tiếp theo
         }
         
         await delay(2000); // Thêm delay trước khi click kết bạn để giống người thật
 
-        // Kiểm tra trạng thái
-        const followStatus = await page.evaluate(() => {
-          const btn = Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes('Theo dõi'));
-          if (!btn) return { exists: false };
-          return {
-            exists: true,
-            disabled: btn.disabled || btn.classList.contains('cursor-not-allowed')
-          };
+        // Kiểm tra trạng thái các nút
+        const checkResult = await page.evaluate(() => {
+          const text = document.body.textContent;
+          if (text.includes('Đang chờ chấp nhận')) return 'pending';
+          
+          // Kiểm tra "Bạn bè"
+          const isFriend = Array.from(document.querySelectorAll('div')).some(d => d.textContent.trim() === 'Bạn bè' && d.classList.contains('bg-primary'));
+          if (isFriend || text.includes('Bạn bè')) return 'friend';
+
+          // Kiểm tra "Đang xếp hàng"
+          const isQueuing = Array.from(document.querySelectorAll('button')).some(b => b.textContent.includes('Đang xếp hàng') && b.disabled);
+          if (isQueuing) return 'queuing';
+
+          // Kiểm tra nút "Theo dõi"
+          const followBtn = Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes('Theo dõi'));
+          if (followBtn) {
+            if (followBtn.disabled || followBtn.classList.contains('cursor-not-allowed')) {
+              return 'full';
+            }
+            return 'available';
+          }
+          
+          return 'unknown';
         });
 
-        if (!followStatus.exists) {
-           logInfo(`⚠️ ${celeb.username} Đã kết bạn từ trước (hiện 'Đang chờ chấp nhận').`);
-           results.success.push(celeb.username);
-        } else if (followStatus.disabled) {
-          logInfo(`❌ ${celeb.username} Đã FULL bạn (Nút bị mờ).`);
+        if (checkResult === 'friend' || checkResult === 'pending') {
+           logInfo(`⚠️ ${celeb.username} Đã là Bạn bè hoặc Đang chờ chấp nhận từ trước.`);
+           // Không đẩy vào mảng success để tránh gửi nhầm thông báo báo cáo
+        } else if (checkResult === 'full' || checkResult === 'queuing') {
+          logInfo(`❌ ${celeb.username} Đã hết slot (Full hoặc Đang xếp hàng). Nút bị khóa, bỏ qua.`);
           results.full.push(celeb.username);
-        } else {
+        } else if (checkResult === 'available') {
+          logInfo(`✅ Nút khả dụng, đang gửi lời mời tới ${celeb.username}...`);
           const followBtn = await page.$('button.bg-yellow-500');
           if (followBtn) {
             const box = await followBtn.boundingBox();
