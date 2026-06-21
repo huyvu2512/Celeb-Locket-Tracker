@@ -215,12 +215,20 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames)
 
       // ----------------------------------------------------------
       // AUTO-ADD THẦN TỐC TRƯỚC KHI LÀM BẤT CỨ VIỆC GÌ KHÁC!
+      // Giới hạn tối đa 2 lần/run để tránh bị ban tài khoản
       // ----------------------------------------------------------
       let autoAddResults = null;
       if (!knownUsernames.has(username) && !DRY_RUN) {
-        logSuccess(`🚀 [SPEED ADD] Gọi Auto-Add ngay lập tức cho @${username} trước khi lấy link invite!`);
-        const { autoAddFriends } = require('./auto-adder');
-        autoAddResults = await autoAddFriends([{ username }]);
+        if (global.autoAddCount === undefined) global.autoAddCount = 0;
+        
+        if (global.autoAddCount < 2) {
+          logSuccess(`🚀 [SPEED ADD] Gọi Auto-Add ngay lập tức cho @${username} trước khi lấy link invite!`);
+          const { autoAddFriends } = require('./auto-adder');
+          autoAddResults = await autoAddFriends([{ username }]);
+          global.autoAddCount++;
+        } else {
+          logWarning(`⚠️ Đã đạt giới hạn Auto-Add (2 lần/run) để chống ban. Bỏ qua Auto-Add cho @${username}`);
+        }
       }
 
       // Resolve invite link
@@ -334,9 +342,16 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames)
 
           let autoAddResults = null;
           if (!knownUsernames.has(username) && !DRY_RUN) {
-            logSuccess(`🚀 [SPEED ADD] Gọi Auto-Add ngay lập tức cho @${username} từ IG Story!`);
-            const { autoAddFriends } = require('./auto-adder');
-            autoAddResults = await autoAddFriends([{ username }]);
+            if (global.autoAddCount === undefined) global.autoAddCount = 0;
+            
+            if (global.autoAddCount < 2) {
+              logSuccess(`🚀 [SPEED ADD] Gọi Auto-Add ngay lập tức cho @${username} từ IG Story!`);
+              const { autoAddFriends } = require('./auto-adder');
+              autoAddResults = await autoAddFriends([{ username }]);
+              global.autoAddCount++;
+            } else {
+              logWarning(`⚠️ Đã đạt giới hạn Auto-Add (2 lần/run) để chống ban. Bỏ qua Auto-Add cho @${username}`);
+            }
           }
 
           await delay(REQUEST_DELAY_MS);
