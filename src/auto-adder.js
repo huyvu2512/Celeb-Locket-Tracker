@@ -135,7 +135,11 @@ async function autoAddFriends(newCelebs) {
           // Kiểm tra nút "Theo dõi"
           const followBtn = btns.find(b => b.textContent.includes('Theo dõi'));
           if (followBtn) {
-            if (followBtn.disabled || followBtn.classList.contains('cursor-not-allowed')) {
+            const style = window.getComputedStyle(followBtn);
+            if (followBtn.disabled || 
+                followBtn.classList.contains('cursor-not-allowed') || 
+                followBtn.classList.contains('opacity-50') || 
+                style.pointerEvents === 'none') {
               return 'full';
             }
             return 'available';
