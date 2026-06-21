@@ -1,90 +1,101 @@
-# 🎯 Celeb Locket Tracker
+<div align="center">
 
-Bot GitHub Action tự động quét trang Threads [@locketcameravn](https://www.threads.net/@locketcameravn) để phát hiện celeb mới trên Locket.
+# 🚀 Celeb Locket Tracker
 
-## ✨ Tính năng
+**Hệ thống tự động săn lùng & cập nhật link Locket VIP của các Người Nổi Tiếng trên mạng xã hội.**
 
-- 🔍 **Quét tự động** bài viết + bình luận trên Threads
-- 🔗 **Resolve đầy đủ** link `locket.cam` → link invite `locket.camera/invites/...`
-- 📝 **Ghi nhớ trạng thái** — chỉ quét bài mới, không lặp lại bài cũ đã resolve
-- 🔄 **Quét lại bài chưa resolve** — bài quét lần trước không tìm thấy link sẽ được quét lại
-- ⚡ **Siêu nhẹ** — không cần Playwright/Selenium, không cần đăng nhập, zero dependencies
+![Node.js](https://img.shields.io/badge/Node.js-20-339933?logo=nodedotjs&logoColor=white)
+![Puppeteer](https://img.shields.io/badge/Puppeteer-Browser_Automation-00D8A2?logo=puppeteer&logoColor=black)
+![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-Automated-2088FF?logo=github-actions&logoColor=white)
+![Telegram](https://img.shields.io/badge/Telegram-Bot_Alerts-2CA5E0?logo=telegram&logoColor=white)
 
-## 🚀 Cách hoạt động
+📦 **[GitHub](https://github.com/huyvu2512/Celeb-Locket-Tracker)** · 👤 **[Liên hệ](https://beacons.ai/huyvu2512)**
 
-1. **cron-job.org** gọi GitHub API để kích hoạt workflow mỗi 15 phút
-2. **GitHub Action** chạy `tracker.js`
-3. Script quét trang profile → Tìm bài mới → Quét chi tiết (caption + bình luận)
-4. Tìm link `locket.cam/username` → Fetch trang đó → Trích xuất invite URL
-5. Cập nhật `data/celebs.json` → Auto commit & push
+---
 
-## 📂 Cấu trúc
+### 📊 Thống Kê Dự Án
 
-```
-├── .github/workflows/tracker.yml   # GitHub Action workflow
-├── src/
-│   ├── tracker.js                   # Script chính
-│   ├── threads-scraper.js           # Quét Threads
-│   ├── locket-resolver.js           # Resolve link Locket
-│   └── utils.js                     # Hàm tiện ích
-├── data/
-│   ├── celebs.json                  # Danh sách celeb đã thu thập
-│   └── scan_state.json              # Trạng thái quét
-└── package.json
-```
+[![Stars](https://img.shields.io/github/stars/huyvu2512/Celeb-Locket-Tracker?style=flat-square&label=⭐%20Stars&color=FFCC00)](https://github.com/huyvu2512/Celeb-Locket-Tracker/stargazers)
+[![Forks](https://img.shields.io/github/forks/huyvu2512/Celeb-Locket-Tracker?style=flat-square&label=🍴%20Forks&color=6e7681)](https://github.com/huyvu2512/Celeb-Locket-Tracker/forks)
+[![Issues](https://img.shields.io/github/issues/huyvu2512/Celeb-Locket-Tracker?style=flat-square&label=🐛%20Issues&color=f85149)](https://github.com/huyvu2512/Celeb-Locket-Tracker/issues)
+[![Last Commit](https://img.shields.io/github/last-commit/huyvu2512/Celeb-Locket-Tracker?style=flat-square&label=🕐%20Cập%20nhật&color=3fb950)](https://github.com/huyvu2512/Celeb-Locket-Tracker/commits/main)
+![Visitors](https://visitor-badge.laobi.icu/badge?page_id=huyvu2512.Celeb-Locket-Tracker&left_text=👁%20Lượt%20xem&left_color=6e7681&right_color=FF0000)
 
-## ⚙️ Cấu hình cron-job.org
+</div>
 
-1. Tạo tài khoản tại [cron-job.org](https://console.cron-job.org/jobs)
-2. Tạo job mới với URL:
-   ```
-   https://api.github.com/repos/{OWNER}/{REPO}/actions/workflows/tracker.yml/dispatches
-   ```
-3. Method: `POST`
-4. Headers:
-   ```
-   Authorization: Bearer {GITHUB_TOKEN}
-   Accept: application/vnd.github.v3+json
-   ```
-5. Body:
-   ```json
-   {"ref": "main"}
-   ```
-6. Schedule: Mỗi 15 phút vào các giờ chẵn
+---
 
-## 🔑 Cấu hình GitHub Secrets (Cho Instagram)
+## ⚠️ Tuyên bố miễn trách nhiệm
 
-Để công cụ có thể quét tin (Stories) trên Instagram, bạn cần cấu hình API Key:
+> **Dự án này được xây dựng hoàn toàn vì mục đích học tập, khám phá kỹ thuật tự động hóa và phi lợi nhuận.**
+>
+> - Toàn bộ dữ liệu (tên người dùng, đường link chia sẻ, số lượng slot) được trích xuất hoàn toàn tự động từ các nguồn công khai do chính chủ đăng tải trên mạng xã hội (Threads, Instagram).
+> - Dự án **không** lưu trữ, phân phối lại, sửa đổi hay khai thác trái phép quyền riêng tư của bất kỳ cá nhân nào.
+> - Dự án **không** có mục đích thương mại, không kinh doanh, không thu phí dưới bất kỳ hình thức nào.
+> - Mọi nhãn hiệu, thương hiệu liên quan đến Locket, Instagram, Threads đều thuộc quyền sở hữu của các công ty chủ quản.
+> - Nếu có bất kỳ lo ngại nào về quyền riêng tư, vui lòng liên hệ tác giả để xử lý ngay lập tức.
 
-1. Đăng ký tài khoản và subscribe gói Free của API **instagram120** trên [RapidAPI](https://rapidapi.com/3205/api/instagram120).
-2. Lấy mã `X-RapidAPI-Key` của bạn.
-3. Vào repo GitHub của dự án → **Settings** → **Secrets and variables** → **Actions**.
-4. Tạo secret mới với tên `RAPIDAPI_KEY` và dán mã key của bạn vào.
-(Nếu bạn chạy thử dưới local, hãy cấu hình environment variable `RAPIDAPI_KEY` trước khi chạy script).
+---
 
-## 🧪 Chạy thử local
+## ✨ Tính Năng Nổi Bật
 
-```bash
-# Chạy bình thường (ghi file)
-node src/tracker.js
+- **🕵️‍♂️ Quét tự động đa nền tảng:** Lắng nghe và trích xuất dữ liệu bài đăng mới nhất từ Threads và Instagram Stories hoàn toàn tự động.
+- **🎯 Sniper Mode (Chế độ Bắn Tỉa):** AI tự động phân tích ngôn ngữ tự nhiên từ caption để phát hiện "Giờ Vàng" (thời điểm Celeb chuẩn bị thả link). Tự động canh giờ, chuyển sang chế độ quét liên tục (5s/lần) đúng thời khắc quyết định để hớt tay trên những slot Locket giới hạn.
+- **⚡ Phân tích link siêu tốc:** Phân giải (resolve) trực tiếp link `locket.cam` để lấy thông tin chi tiết (avatar, tên, giới hạn slot) theo thời gian thực mà không cần tải ứng dụng.
+- **📱 Cảnh báo Telegram:** Gửi tin nhắn thông báo đẩy (push notification) cực xịn về điện thoại ngay lập tức khi phát hiện Celeb mới, hoặc khi Celeb hiện tại mở thêm số lượng slot giới hạn.
+- **🕒 Vận hành Serverless 24/7:** Chạy hoàn toàn miễn phí và tự động thông qua GitHub Actions và bộ hẹn giờ cron-job.
 
-# Chạy dry-run (chỉ log, không ghi file)
+---
+
+## 🛠 Cấu trúc dự án
+
+\`\`\`text
+📦 Celeb-Locket-Tracker
+ ┣ 📂 data                  # Thư mục lưu trữ database JSON (được cập nhật tự động bởi Github Action)
+ ┃ ┣ 📜 celebs.json         # Danh sách link Locket của các Celeb đã săn được
+ ┃ ┗ 📜 scan_state.json     # Lưu trạng thái, lịch sử bài viết đã quét và thời gian kích hoạt Sniper Mode
+ ┣ 📂 src
+ ┃ ┣ 📜 tracker.js          # File thực thi chính - Trái tim của toàn bộ hệ thống
+ ┃ ┣ 📜 threads-scraper.js  # Tool cạo dữ liệu ẩn danh từ mạng xã hội Threads 
+ ┃ ┣ 📜 insta-scraper.js    # Tương tác với Instagram API thông qua RapidAPI
+ ┃ ┣ 📜 locket-resolver.js  # Trích xuất dữ liệu từ deep-link của Locket
+ ┃ ┗ 📜 utils.js            # Các hàm hỗ trợ dùng chung (I/O, bóc tách thời gian, gửi Telegram...)
+ ┣ 📂 .github/workflows
+ ┃ ┗ 📜 tracker.yml         # File cấu hình tự động hoá của Github Actions (CI/CD)
+ ┣ 📜 package.json
+ ┗ 📜 README.md
+\`\`\`
+
+---
+
+## 💻 Hướng dẫn chạy thử nội bộ (Local)
+
+1. Tải dự án về máy:
+\`\`\`bash
+git clone https://github.com/huyvu2512/Celeb-Locket-Tracker.git
+cd Celeb-Locket-Tracker
+\`\`\`
+
+2. Cài đặt các thư viện cần thiết:
+\`\`\`bash
+npm install
+\`\`\`
+
+3. Chạy hệ thống giả lập (không ghi đè file lưu trữ):
+\`\`\`bash
 node src/tracker.js --dry-run
-```
+\`\`\`
 
-## 📋 Format dữ liệu celeb
+---
 
-Mỗi celeb trong `data/celebs.json`:
+## 🤝 Đóng góp (Contributing)
 
-```json
-{
-  "username": "cuecamfamily",
-  "display_name": "Gia đình",
-  "locket_cam_url": "https://locket.cam/cuecamfamily",
-  "invite_url": "https://locket.camera/invites/2GJKRoeBY5UlaZ7Ml1AGGkjeCJ13d09816d7926150ef?type=UsernameLink",
-  "slot_limit": 2000,
-  "found_at": "2026-06-20T02:00:24.000Z",
-  "source_post_code": "DZy5ChcmOVH",
-  "source_type": "caption"
-}
-```
+Mọi đóng góp nhằm tối ưu hóa bộ code, bóc tách API sâu hơn hoặc phát triển thêm các nền tảng quét mới (như Facebook, TikTok) đều được hoan nghênh. 
+
+Hãy thoải mái tạo Pull Request hoặc mở một Issue mới nếu bạn phát hiện lỗi hoặc có tính năng hay muốn thêm vào. Vui lòng tham khảo file \`CONTRIBUTING.md\` để biết thêm chi tiết.
+
+---
+
+## 📄 Giấy phép (License)
+
+Dự án này được phân phối dưới giấy phép **MIT**. Xem file \`LICENSE\` để biết thêm thông tin.
