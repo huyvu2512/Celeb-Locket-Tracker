@@ -75,6 +75,7 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames)
   //    - Bài đã quét nhưng chưa resolve (resolved: false)
   // ----------------------------------------------------------
   const postsToScan = [];
+  const latestPostCode = profilePosts.length > 0 ? profilePosts[0].code : null;
 
   for (const post of profilePosts) {
     const state = scanState.scanned_posts[post.code];
@@ -82,9 +83,12 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames)
     if (!state) {
       // Bài mới chưa từng quét
       postsToScan.push({ ...post, reason: 'MỚI' });
+    } else if (state.resolved === false && post.code === latestPostCode) {
+      // Chỉ quét lại BÀI GẦN NHẤT (nếu chưa tìm thấy link)
+      postsToScan.push({ ...post, reason: 'QUÉT LẠI (BÀI MỚI NHẤT)' });
     } else if (state.resolved === false) {
-      // Bài đã quét nhưng chưa tìm thấy link → quét lại
-      postsToScan.push({ ...post, reason: 'QUÉT LẠI' });
+      // Các bài cũ đã quét mà không có link -> Đánh dấu hoàn thành luôn để bỏ qua
+      scanState.scanned_posts[post.code].resolved = true;
     }
     // else: đã quét và đã resolve → bỏ qua
   }
