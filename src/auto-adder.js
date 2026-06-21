@@ -175,10 +175,8 @@ async function autoAddFriends(newCelebs) {
           results.success.push(celeb.username);
         }
 
-        // Nghỉ 1 chút trước khi đóng khung tìm kiếm (click ra ngoài hoặc reload để reset)
-        await delay(5000); // Tăng delay lên 5 giây để mô phỏng người thật, tránh spam
-        await page.goto('https://locket-dio.com/locket', { waitUntil: 'networkidle2' });
-        await delay(2000);
+        // Không cần delay vì browser sẽ bị đóng ngay sau khi add 1 celeb
+        await delay(500);
 
       } catch (err) {
         logError(`💥 Lỗi khi xử lý ${celeb.username}: ${err.message}`);
