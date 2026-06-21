@@ -61,7 +61,7 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames)
     }
   } catch (err) {
     logError(`Không thể quét profile @${TARGET_USERNAME}: ${err.message}`);
-    process.exit(1);
+    return 0; // Return 0 to avoid crashing, especially useful during Sniper Mode where we want to retry
   }
 
   if (profilePosts.length === 0) {
