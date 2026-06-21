@@ -1,5 +1,5 @@
 {
-  "last_scan": "2026-06-21T06:28:52.453Z",
+  "last_scan": "2026-06-21T07:15:36.428Z",
   "last_ig_scan": null,
   "last_ig_scan_signature": null,
   "scanned_posts": {
@@ -9,11 +9,11 @@
     },
     "DZykfJGmAm1": {
       "resolved": false,
-      "scanned_at": "2026-06-21T06:27:24.726Z"
+      "scanned_at": "2026-06-21T07:15:29.879Z"
     },
     "DZy2nfoGNqs": {
       "resolved": false,
-      "scanned_at": "2026-06-21T06:27:27.631Z"
+      "scanned_at": "2026-06-21T07:15:33.138Z"
     },
     "DZxcrgRmJYr": {
       "resolved": true,
@@ -21,7 +21,7 @@
     },
     "DZyj3orGOe8": {
       "resolved": false,
-      "scanned_at": "2026-06-21T06:27:36.036Z"
+      "scanned_at": "2026-06-21T07:15:36.428Z"
     },
     "DZxLLgDGFHm": {
       "resolved": true,
@@ -95,5 +95,7 @@
       "resolved": false,
       "scanned_at": "2026-06-21T06:28:52.453Z"
     }
-  }
+  },
+  "sniper_target_time": "2026-06-21T21:00:00.000Z",
+  "sniper_completed": false
 }
