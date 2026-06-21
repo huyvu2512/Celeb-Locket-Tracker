@@ -213,6 +213,16 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames)
         continue;
       }
 
+      // ----------------------------------------------------------
+      // AUTO-ADD THẦN TỐC TRƯỚC KHI LÀM BẤT CỨ VIỆC GÌ KHÁC!
+      // ----------------------------------------------------------
+      let autoAddResults = null;
+      if (!knownUsernames.has(username) && !DRY_RUN) {
+        logSuccess(`🚀 [SPEED ADD] Gọi Auto-Add ngay lập tức cho @${username} trước khi lấy link invite!`);
+        const { autoAddFriends } = require('./auto-adder');
+        autoAddResults = await autoAddFriends([{ username }]);
+      }
+
       // Resolve invite link
       await delay(REQUEST_DELAY_MS);
 
@@ -255,6 +265,7 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames)
         found_at: new Date((post.taken_at || postDetails.taken_at || (Date.now() / 1000)) * 1000).toISOString(),
         source_post_code: post.code,
         source_type: sourceType,
+        auto_add_results: autoAddResults,
       };
 
       celebs.push(newCeleb);
@@ -321,6 +332,13 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames)
           const username = extractUsernameFromAppUrl(appUrl);
           if (!username) continue;
 
+          let autoAddResults = null;
+          if (!knownUsernames.has(username) && !DRY_RUN) {
+            logSuccess(`🚀 [SPEED ADD] Gọi Auto-Add ngay lập tức cho @${username} từ IG Story!`);
+            const { autoAddFriends } = require('./auto-adder');
+            autoAddResults = await autoAddFriends([{ username }]);
+          }
+
           await delay(REQUEST_DELAY_MS);
           const resolved = await resolveAppLink(appUrl);
           if (!resolved) continue;
@@ -356,6 +374,7 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames)
             found_at: new Date().toISOString(),
             source_post_code: sourceText,
             source_type: sourceType,
+            auto_add_results: autoAddResults,
           };
 
           celebs.push(newCeleb);
@@ -469,11 +488,6 @@ async function main() {
   log('='.repeat(60));
   if (newCelebsFound > 0) {
     logSuccess(`Tổng cộng tìm thấy ${newCelebsFound} celeb mới!`);
-    let autoAddResults = null;
-    if (!isDryRun) {
-      const { autoAddFriends } = require('./auto-adder');
-      autoAddResults = await autoAddFriends(newlyFoundCelebs);
-    }
 
     for (const c of newlyFoundCelebs) {
       // Chuyển đổi định dạng thời gian cho đẹp
@@ -505,15 +519,29 @@ async function main() {
       await sendTelegramMessage(msg, replyMarkup);
       await delay(500); // Tránh rate limit của Telegram khi gửi nhiều
 
-      if (autoAddResults && autoAddResults.success.includes(c.username)) {
+      if (c.auto_add_results) {
         let successMsg = `🤖 <b>AUTO ADD CELEB</b>\n\n`;
         successMsg += `👤 <b>Tên:</b> ${c.display_name}\n`;
         successMsg += `🆔 <b>Username:</b> @ ${c.username}\n`;
         successMsg += `🎫 <b>Slot:</b> ${c.slot_limit ? c.slot_limit.toLocaleString('en-US') : 'Không rõ'}\n`;
-        successMsg += `✅ <b>Đã kết bạn thành công!</b>\n`;
-        successMsg += `⏱ <b>Thời gian:</b> ${timeStr}\n`;
-        await sendTelegramMessage(successMsg);
-        await delay(500);
+        
+        let shouldSend = false;
+        if (c.auto_add_results.success && c.auto_add_results.success.includes(c.username)) {
+           successMsg += `✅ <b>Đã kết bạn thành công!</b>\n`;
+           shouldSend = true;
+        } else if (c.auto_add_results.full && c.auto_add_results.full.includes(c.username)) {
+           successMsg += `❌ <b>Thất bại (Hết Slot hoặc Xếp hàng)</b>\n`;
+           shouldSend = true;
+        } else if (c.auto_add_results.skipped && c.auto_add_results.skipped.includes(c.username)) {
+           successMsg += `⚠️ <b>Đã là Bạn bè từ trước!</b>\n`;
+           shouldSend = true;
+        }
+        
+        if (shouldSend) {
+          successMsg += `⏱ <b>Thời gian:</b> ${timeStr}\n`;
+          await sendTelegramMessage(successMsg);
+          await delay(500);
+        }
       }
     }
 

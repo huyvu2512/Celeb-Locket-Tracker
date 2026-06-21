@@ -22,8 +22,9 @@ async function autoAddFriends(newCelebs) {
   
   const results = {
     success: [],
+    error: [],
     full: [],
-    error: []
+    skipped: []
   };
 
   const browser = await puppeteer.launch({
@@ -144,7 +145,7 @@ async function autoAddFriends(newCelebs) {
 
         if (checkResult === 'friend' || checkResult === 'pending') {
            logInfo(`⚠️ ${celeb.username} Đã là Bạn bè hoặc Đang chờ chấp nhận từ trước.`);
-           // Không đẩy vào mảng success để tránh gửi nhầm thông báo báo cáo
+           results.skipped.push(celeb.username);
         } else if (checkResult === 'full' || checkResult === 'queuing') {
           logInfo(`❌ ${celeb.username} Đã hết slot (Full hoặc Đang xếp hàng). Nút bị khóa, bỏ qua.`);
           results.full.push(celeb.username);
