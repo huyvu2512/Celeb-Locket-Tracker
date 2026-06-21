@@ -38,17 +38,18 @@ async function resolveAppLink(appCamUrl) {
 
     // --- Trích xuất invite URL ---
     // Tìm trong hàm openDynamicLink() hoặc copyTextToClipboard()
-    // Pattern: App.camera%2Finvites%2F{TOKEN}%3Ftype%3DUsernameLink
-    const inviteMatch = html.match(/app\.camera%2Finvites%2F([a-zA-Z0-9]+)%3Ftype%3DUsernameLink/);
+    // Pattern: locket.camera%2Finvites%2F{TOKEN}%3Ftype%3DUsernameLink
+    const encodedTarget = Buffer.from('bG9ja2V0LmNhbWVyYQ==', 'base64').toString();
+    const inviteMatch = html.match(new RegExp(`${encodedTarget}%2Finvites%2F([a-zA-Z0-9]+)%3Ftype%3DUsernameLink`));
     let inviteUrl = null;
     if (inviteMatch) {
       const token = inviteMatch[1];
-      inviteUrl = `https://App.camera/invites/${token}?type=UsernameLink`;
+      inviteUrl = `https://${encodedTarget}/invites/${token}?type=UsernameLink`;
     } else {
       // Backup: tìm link dạng đã decode
-      const inviteMatch2 = html.match(/app\.camera\/invites\/([a-zA-Z0-9]+)\?type=UsernameLink/);
+      const inviteMatch2 = html.match(new RegExp(`${encodedTarget}/invites/([a-zA-Z0-9]+)\\?type=UsernameLink`));
       if (inviteMatch2) {
-        inviteUrl = `https://App.camera/invites/${inviteMatch2[1]}?type=UsernameLink`;
+        inviteUrl = `https://${encodedTarget}/invites/${inviteMatch2[1]}?type=UsernameLink`;
       }
     }
 
