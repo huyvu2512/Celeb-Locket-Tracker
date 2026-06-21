@@ -107,8 +107,10 @@ async function autoAddFriends(newCelebs) {
         // Đợi kết quả hiển thị
         try {
           await page.waitForFunction(() => {
-            const text = document.body.textContent;
-            return text.includes('Theo dõi') || text.includes('Đang chờ chấp nhận') || text.includes('Bạn bè') || text.includes('Đang xếp hàng');
+            const btns = Array.from(document.querySelectorAll('button'));
+            const hasButton = btns.some(b => b.textContent.includes('Theo dõi') || b.textContent.includes('Đang chờ chấp nhận') || b.textContent.includes('Đang xếp hàng'));
+            const hasFriendBadge = Array.from(document.querySelectorAll('div')).some(d => d.textContent.trim() === 'Bạn bè' && d.classList.contains('bg-primary'));
+            return hasButton || hasFriendBadge;
           }, { timeout: 15000 });
         } catch (e) {
           logError(`❌ Không tìm thấy thông tin trên trang cho ${celeb.username}. Bỏ qua.`);
@@ -120,19 +122,18 @@ async function autoAddFriends(newCelebs) {
 
         // Kiểm tra trạng thái các nút
         const checkResult = await page.evaluate(() => {
-          const text = document.body.textContent;
-          if (text.includes('Đang chờ chấp nhận')) return 'pending';
+          const btns = Array.from(document.querySelectorAll('button'));
           
-          // Kiểm tra "Bạn bè"
-          const isFriend = Array.from(document.querySelectorAll('div')).some(d => d.textContent.trim() === 'Bạn bè' && d.classList.contains('bg-primary'));
-          if (isFriend || text.includes('Bạn bè')) return 'friend';
+          if (btns.some(b => b.textContent.includes('Đang chờ chấp nhận'))) return 'pending';
+          
+          if (btns.some(b => b.textContent.includes('Đang xếp hàng'))) return 'queuing';
 
-          // Kiểm tra "Đang xếp hàng"
-          const isQueuing = Array.from(document.querySelectorAll('button')).some(b => b.textContent.includes('Đang xếp hàng') && b.disabled);
-          if (isQueuing) return 'queuing';
+          // Kiểm tra "Bạn bè"
+          const isFriend = Array.from(document.querySelectorAll('div, span')).some(d => d.textContent.trim() === 'Bạn bè' && d.classList.contains('bg-primary'));
+          if (isFriend) return 'friend';
 
           // Kiểm tra nút "Theo dõi"
-          const followBtn = Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes('Theo dõi'));
+          const followBtn = btns.find(b => b.textContent.includes('Theo dõi'));
           if (followBtn) {
             if (followBtn.disabled || followBtn.classList.contains('cursor-not-allowed')) {
               return 'full';
