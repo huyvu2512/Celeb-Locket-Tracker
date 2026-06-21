@@ -109,8 +109,10 @@ async function runTest() {
       console.log('✅ Nút khả dụng, tiến hành ấn Theo dõi...');
       await page.evaluate(() => {
         const btns = Array.from(document.querySelectorAll('button'));
-        const btn = btns.find(b => b.textContent.includes('Theo dõi'));
-        if (btn) btn.click();
+        const btn = btns.find(b => b.textContent.includes('Theo dõi') && b.offsetParent !== null);
+        if (btn) {
+           btn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
+        }
       });
 
       console.log('⏳ Đợi phản hồi thành "Đang chờ chấp nhận"...');

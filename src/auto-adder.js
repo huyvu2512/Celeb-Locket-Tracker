@@ -89,9 +89,10 @@ async function autoAddFriends(newCelebs) {
         await page.click(searchInputSelector, { clickCount: 3 });
         await page.keyboard.press('Backspace');
 
-        // Nhập username mới
-        await page.type(searchInputSelector, celeb.username, { delay: 50 });
-        await new Promise(r => setTimeout(r, 500)); // Đợi React nhận data
+        // Nhập username mới với delay chân thực
+        await delay(1000);
+        await page.type(searchInputSelector, celeb.username, { delay: 150 });
+        await delay(1500); // Đợi React nhận data và hiển thị nút tìm kiếm
 
         // Bấm nút tìm kiếm
         await page.evaluate(() => {
@@ -107,12 +108,14 @@ async function autoAddFriends(newCelebs) {
           await page.waitForFunction(() => {
             const text = document.body.textContent;
             return text.includes('Theo dõi') || text.includes('Đang chờ chấp nhận');
-          }, { timeout: 10000 });
+          }, { timeout: 15000 });
         } catch (e) {
           logError(`❌ Không tìm thấy nút Theo dõi cho ${celeb.username}. Bỏ qua.`);
           results.error.push(celeb.username);
           continue; // Sang celeb tiếp theo
         }
+        
+        await delay(2000); // Thêm delay trước khi click kết bạn để giống người thật
 
         // Kiểm tra trạng thái
         const followStatus = await page.evaluate(() => {
@@ -131,11 +134,12 @@ async function autoAddFriends(newCelebs) {
           logInfo(`❌ ${celeb.username} Đã FULL bạn (Nút bị mờ).`);
           results.full.push(celeb.username);
         } else {
-          logInfo(`✅ Nút khả dụng, đang gửi lời mời tới ${celeb.username}...`);
           await page.evaluate(() => {
             const btns = Array.from(document.querySelectorAll('button'));
-            const btn = btns.find(b => b.textContent.includes('Theo dõi'));
-            if (btn) btn.click();
+            const btn = btns.find(b => b.textContent.includes('Theo dõi') && b.offsetParent !== null);
+            if (btn) {
+               btn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
+            }
           });
 
           await page.waitForFunction(() => {
@@ -146,9 +150,9 @@ async function autoAddFriends(newCelebs) {
         }
 
         // Nghỉ 1 chút trước khi đóng khung tìm kiếm (click ra ngoài hoặc reload để reset)
-        await delay(2000);
+        await delay(5000); // Tăng delay lên 5 giây để mô phỏng người thật, tránh spam
         await page.goto('https://locket-dio.com/locket', { waitUntil: 'networkidle2' });
-        await delay(1000);
+        await delay(2000);
 
       } catch (err) {
         logError(`💥 Lỗi khi xử lý ${celeb.username}: ${err.message}`);
