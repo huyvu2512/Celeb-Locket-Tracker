@@ -39,7 +39,7 @@ async function autoAddFriends(newCelebs) {
 
   try {
     logInfo('🌐 Truy cập trang đăng nhập locket-dio.com...');
-    await page.goto('https://locket-dio.com/login', { waitUntil: 'networkidle2' });
+    await page.goto('https://locket-dio.com/login', { waitUntil: 'domcontentloaded' });
 
     const emailInput = await page.$('input[type="email"]') || await page.$('input[placeholder*="email" i]');
     if (emailInput) {
@@ -90,10 +90,10 @@ async function autoAddFriends(newCelebs) {
         await page.click(searchInputSelector, { clickCount: 3 });
         await page.keyboard.press('Backspace');
 
-        // Nhập username mới với delay chân thực
-        await delay(1000);
-        await page.type(searchInputSelector, celeb.username, { delay: 150 });
-        await delay(1500); // Đợi React nhận data và hiển thị nút tìm kiếm
+        // Nhập username mới với delay cực thấp
+        await delay(200);
+        await page.type(searchInputSelector, celeb.username, { delay: 10 });
+        await delay(500); // Đợi React nhận data và hiển thị nút tìm kiếm
 
         // Bấm nút tìm kiếm
         await page.evaluate(() => {
@@ -118,7 +118,7 @@ async function autoAddFriends(newCelebs) {
           continue; // Sang celeb tiếp theo
         }
         
-        await delay(2000); // Thêm delay trước khi click kết bạn để giống người thật
+        await delay(500); // Thêm 1 chút delay nhỏ để React render xong trạng thái nút
 
         // Kiểm tra trạng thái các nút
         const checkResult = await page.evaluate(() => {
@@ -177,10 +177,10 @@ async function autoAddFriends(newCelebs) {
           results.success.push(celeb.username);
         }
 
-        // Nghỉ 1 chút trước khi đóng khung tìm kiếm (click ra ngoài hoặc reload để reset)
-        await delay(5000); // Tăng delay lên 5 giây để mô phỏng người thật, tránh spam
-        await page.goto('https://locket-dio.com/locket', { waitUntil: 'networkidle2' });
-        await delay(2000);
+        // Nghỉ 1 chút trước khi sang celeb khác
+        await delay(500);
+        await page.goto('https://locket-dio.com/locket', { waitUntil: 'domcontentloaded' });
+        await delay(500);
 
       } catch (err) {
         logError(`💥 Lỗi khi xử lý ${celeb.username}: ${err.message}`);
