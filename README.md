@@ -42,7 +42,8 @@
 - **🕵️‍♂️ Quét tự động đa nền tảng:** Lắng nghe và trích xuất dữ liệu bài đăng mới nhất từ Threads và Instagram Stories hoàn toàn tự động.
 - **🎯 Sniper Mode (Chế độ Bắn Tỉa):** AI tự động phân tích ngôn ngữ tự nhiên (NLP) từ caption để phát hiện "Giờ Vàng". Khi đến giờ G, hệ thống tự động khóa mục tiêu và chuyển sang trạng thái "Cuồng nộ": **Spam quét liên tục không độ trễ (0s) trong 10 phút đầu tiên**, sau đó duy trì tần suất 5s/lần trong 50 phút còn lại để hớt tay trên mọi slot giới hạn! Tích hợp **Early Exit** tự ngắt lập tức khi cắn link và khả năng **tự phục hồi** dẻo dai trước mọi sự cố nghẽn mạng.
 - **⚡ Phân tích link siêu tốc:** Phân giải (resolve) trực tiếp link `App.cam` để lấy thông tin chi tiết (avatar, tên, giới hạn slot) theo thời gian thực mà không cần tải ứng dụng.
-- **📱 Cảnh báo Telegram:** Gửi tin nhắn thông báo đẩy (push notification) cực xịn về điện thoại ngay lập tức khi phát hiện Celeb mới, hoặc khi Celeb hiện tại mở thêm số lượng slot giới hạn.
+- **🤖 Auto-Add Thần Tốc:** Tích hợp trình duyệt ảo tự động đăng nhập Web Dio, nhận diện giao diện và **click kết bạn bằng tọa độ** ngay giây đầu tiên phát hiện Celeb mới. Tự động nhận diện và bỏ qua các trạng thái "Full slot", "Đang xếp hàng", hoặc "Đã là bạn bè".
+- **📱 Cảnh báo Telegram:** Gửi tin nhắn thông báo cực xịn về điện thoại khi săn được Celeb mới, và gửi một báo cáo tách biệt dành riêng cho chiến tích **Auto-Add** thành công!
 - **🕒 Vận hành Serverless 24/7:** Chạy hoàn toàn miễn phí và tự động thông qua GitHub Actions và bộ hẹn giờ cron-job.
 
 ---
@@ -59,12 +60,27 @@
  ┃ ┣ 📜 threads-scraper.js  # Tool cạo dữ liệu ẩn danh từ mạng xã hội Threads 
  ┃ ┣ 📜 insta-scraper.js    # Tương tác với Instagram API thông qua RapidAPI
  ┃ ┣ 📜 link-resolver.js  # Trích xuất dữ liệu từ deep-link của Celeb Tracker
+ ┃ ┣ 📜 auto-adder.js       # Module tự động đăng nhập Web Dio và kết bạn
  ┃ ┗ 📜 utils.js            # Các hàm hỗ trợ dùng chung (I/O, bóc tách thời gian, gửi Telegram...)
  ┣ 📂 .github/workflows
  ┃ ┗ 📜 tracker.yml         # File cấu hình tự động hoá của Github Actions (CI/CD)
  ┣ 📜 package.json
  ┗ 📜 README.md
 ```
+
+---
+
+## ⚙️ Cài đặt Môi trường (GitHub Secrets)
+
+Để hệ thống hoạt động đầy đủ trên GitHub Actions, bạn cần cấu hình các biến môi trường sau trong mục **Settings > Secrets and variables > Actions**:
+
+| Biến | Ý nghĩa |
+|------|---------|
+| `RAPIDAPI_KEY` | Key API dùng để quét Instagram Stories |
+| `TELEGRAM_BOT_TOKEN` | Token của con bot Telegram do BotFather cung cấp |
+| `TELEGRAM_CHAT_ID` | ID của bạn (hoặc group/channel) để nhận thông báo |
+| `L_DIO_EMAIL` | Email đăng nhập vào Web Dio (dành cho tính năng Auto-Add) |
+| `L_DIO_PASSWORD` | Mật khẩu đăng nhập vào Web Dio (dành cho tính năng Auto-Add) |
 
 ---
 
