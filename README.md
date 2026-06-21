@@ -2,7 +2,7 @@
 
 # 🚀 Celeb Locket Tracker
 
-**Hệ thống tự động săn lùng & cập nhật link Locket VIP của các Người Nổi Tiếng trên mạng xã hội.**
+**Hệ thống tự động hóa tốc độ cao chuyên giám sát đa nền tảng, phân tích ngôn ngữ tự nhiên và săn lùng đặc quyền Locket VIP từ các Celeb theo thời gian thực.**
 
 ![Node.js](https://img.shields.io/badge/Node.js-20-339933?logo=nodedotjs&logoColor=white)
 ![Puppeteer](https://img.shields.io/badge/Puppeteer-Browser_Automation-00D8A2?logo=puppeteer&logoColor=black)
@@ -40,7 +40,7 @@
 ## ✨ Tính Năng Nổi Bật
 
 - **🕵️‍♂️ Quét tự động đa nền tảng:** Lắng nghe và trích xuất dữ liệu bài đăng mới nhất từ Threads và Instagram Stories hoàn toàn tự động.
-- **🎯 Sniper Mode (Chế độ Bắn Tỉa):** AI tự động phân tích ngôn ngữ tự nhiên từ caption để phát hiện "Giờ Vàng" (thời điểm Celeb chuẩn bị thả link). Khi đến Giờ Vàng, bot tự động khóa mục tiêu, dồn toàn lực quét liên tục (5s/lần) trong suốt **1 tiếng đồng hồ** và sử dụng tính năng **Early Exit (Tự ngắt thông minh)** để kết thúc ngay lập tức khi săn thành công, dẻo dai chống chịu mọi lỗi mạng!
+- **🎯 Sniper Mode (Chế độ Bắn Tỉa):** AI tự động phân tích ngôn ngữ tự nhiên (NLP) từ caption để phát hiện "Giờ Vàng". Khi đến giờ G, hệ thống tự động khóa mục tiêu và chuyển sang trạng thái "Cuồng nộ": **Spam quét liên tục không độ trễ (0s) trong 10 phút đầu tiên**, sau đó duy trì tần suất 5s/lần trong 50 phút còn lại để hớt tay trên mọi slot giới hạn! Tích hợp **Early Exit** tự ngắt lập tức khi cắn link và khả năng **tự phục hồi** dẻo dai trước mọi sự cố nghẽn mạng.
 - **⚡ Phân tích link siêu tốc:** Phân giải (resolve) trực tiếp link `locket.cam` để lấy thông tin chi tiết (avatar, tên, giới hạn slot) theo thời gian thực mà không cần tải ứng dụng.
 - **📱 Cảnh báo Telegram:** Gửi tin nhắn thông báo đẩy (push notification) cực xịn về điện thoại ngay lập tức khi phát hiện Celeb mới, hoặc khi Celeb hiện tại mở thêm số lượng slot giới hạn.
 - **🕒 Vận hành Serverless 24/7:** Chạy hoàn toàn miễn phí và tự động thông qua GitHub Actions và bộ hẹn giờ cron-job.
