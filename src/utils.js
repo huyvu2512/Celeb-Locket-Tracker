@@ -162,7 +162,7 @@ async function sendTelegramMessage(text, replyMarkup = null) {
     const url = `https://api.telegram.org/bot${token}/sendMessage`;
     const payload = {
       chat_id: chatId,
-      text: message,
+      text: text,
       parse_mode: 'HTML',
       disable_web_page_preview: true
     };
