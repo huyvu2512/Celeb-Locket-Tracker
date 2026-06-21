@@ -100,6 +100,15 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames)
     // else: đã quét và đã resolve → bỏ qua
   }
 
+  // Dọn dẹp rác: Những bài viết quá cũ (không còn nằm trong danh sách profilePosts)
+  // nhưng vẫn bị kẹt ở trạng thái resolved: false thì ép sang true để JSON sạch sẽ
+  const currentPostCodes = new Set(profilePosts.map(p => p.code));
+  for (const code in scanState.scanned_posts) {
+    if (scanState.scanned_posts[code].resolved === false && !currentPostCodes.has(code)) {
+       scanState.scanned_posts[code].resolved = true;
+    }
+  }
+
   logInfo(`Số bài cần quét: ${postsToScan.length} (trong tổng ${profilePosts.length} bài trên profile)`);
 
   if (postsToScan.length === 0) {
