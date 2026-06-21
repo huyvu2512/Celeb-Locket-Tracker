@@ -83,7 +83,11 @@ const DATA_DIR = path.join(__dirname, '..', 'data');
 function readJsonFile(filename, defaultValue = null) {
   const filePath = path.join(DATA_DIR, filename);
   try {
-    const content = fs.readFileSync(filePath, 'utf8');
+    let content = fs.readFileSync(filePath, 'utf8');
+    // Strip BOM if present (PowerShell sometimes adds it)
+    if (content.charCodeAt(0) === 0xFEFF) {
+      content = content.slice(1);
+    }
     return JSON.parse(content);
   } catch (err) {
     if (err.code === 'ENOENT') {
