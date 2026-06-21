@@ -46,5 +46,6 @@ jobs:
             else
               git commit -m "🔄 Cập nhật trạng thái quét [${TIMESTAMP}]"
             fi
+            git pull --rebase
             git push
           fi
