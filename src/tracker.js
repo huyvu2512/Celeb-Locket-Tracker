@@ -180,7 +180,7 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames)
       }
 
       scanState.scanned_posts[post.code] = {
-        resolved: true,
+        resolved: false,
       };
       continue;
     }
