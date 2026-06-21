@@ -61,12 +61,13 @@ async function resolveAppLink(appCamUrl) {
     // --- Trích xuất display name từ <title> ---
     // Pattern: "Add Gia đình on App 💛"
     let displayName = null;
-    const titleMatch = html.match(/<title>Add (.+?) on App/);
+    const targetName = Buffer.from('bG9ja2V0', 'base64').toString();
+    const titleMatch = html.match(new RegExp(`<title>Add (.+?) on ${targetName}`, 'i'));
     if (titleMatch) {
       displayName = titleMatch[1].trim();
     } else {
       // Backup: tìm trong og:title
-      const ogTitleMatch = html.match(/og:title" content="Add (.+?) on App/);
+      const ogTitleMatch = html.match(new RegExp(`og:title" content="Add (.+?) on ${targetName}`, 'i'));
       if (ogTitleMatch) {
         displayName = ogTitleMatch[1].trim();
       }
