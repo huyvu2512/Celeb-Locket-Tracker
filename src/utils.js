@@ -150,8 +150,8 @@ function delay(ms) {
  * @param {object} replyMarkup Tùy chọn nút bấm inline
  */
 async function sendTelegramMessage(text, replyMarkup = null) {
-  const token = process.env.TELEGRAM_BOT_TOKEN || '8530810458:AAGNic4qivzM5J1TYVAxBJzE3TgGoRcyAl8';
-  const chatId = process.env.TELEGRAM_CHAT_ID || '6130572618';
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
 
   if (!token || !chatId) {
     logWarning('Không có TELEGRAM_BOT_TOKEN hoặc TELEGRAM_CHAT_ID. Bỏ qua gửi thông báo Telegram.');

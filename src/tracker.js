@@ -86,6 +86,9 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames)
     } else if (state.resolved === false && post.code === latestPostCode) {
       // Chỉ quét lại BÀI GẦN NHẤT (nếu chưa tìm thấy link)
       postsToScan.push({ ...post, reason: 'QUÉT LẠI (BÀI MỚI NHẤT)' });
+    } else if (state.resolved === false && post.code === scanState.sniper_trigger_code) {
+      // LUÔN quét lại BÀI THÔNG BÁO GIỜ VÀNG
+      postsToScan.push({ ...post, reason: 'QUÉT LẠI (BÀI THÔNG BÁO)' });
     } else if (state.resolved === false) {
       // Các bài cũ đã quét mà không có link -> Đánh dấu hoàn thành luôn để bỏ qua
       scanState.scanned_posts[post.code].resolved = true;
@@ -151,27 +154,30 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames)
     if (foundTargets.length === 0) {
       logWarning(`  Không tìm thấy link locket.cam trong post ${post.code}`);
       
-      // TÌM GIỜ VÀNG TRONG CAPTION VÌ KHÔNG CÓ LINK LOCKET
-      const dropTime = extractDropTime(post.caption || '');
-      if (dropTime && scanState.sniper_target_time !== dropTime) {
-        scanState.sniper_target_time = dropTime;
-        scanState.sniper_completed = false; // Reset cờ hoàn thành
-        
-        logSuccess(`🎯 LÊN LỊCH SNIPER MODE: Phát hiện thông báo giờ vàng: ${dropTime}`);
-        
-        const d = new Date(dropTime);
-        const timeStr = `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')} ${d.getDate().toString().padStart(2, '0')}/${(d.getMonth()+1).toString().padStart(2, '0')}/${d.getFullYear()}`;
-        
-        let msg = `<b>CHUẨN BỊ MỞ SLOT!</b>\n\n`;
-        msg += `⏱ <b>Thời gian dự kiến:</b> ${timeStr}\n`;
-        
-        const postUrl = `https://www.threads.net/@${TARGET_USERNAME}/post/${post.code}`;
-        const replyMarkup = {
-          inline_keyboard: [
-            [{ text: 'Xem bài viết thông báo', url: postUrl }]
-          ]
-        };
-        await sendTelegramMessage(msg, replyMarkup);
+      // NẾU KHÔNG CÓ LINK LOCKET -> TÌM GIỜ VÀNG TRONG CAPTION!
+      if (!scanState.scanned_posts[post.code]?.resolved) {
+        const dropTime = extractDropTime(post.caption || '');
+        if (dropTime && scanState.sniper_target_time !== dropTime) {
+          scanState.sniper_target_time = dropTime;
+          scanState.sniper_trigger_code = post.code;
+          scanState.sniper_completed = false; // Reset cờ hoàn thành
+          
+          logSuccess(`🎯 LÊN LỊCH SNIPER MODE: Phát hiện thông báo giờ vàng: ${dropTime}`);
+          
+          const d = new Date(dropTime);
+          const timeStr = `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')} ${d.getDate().toString().padStart(2, '0')}/${(d.getMonth()+1).toString().padStart(2, '0')}/${d.getFullYear()}`;
+          
+          let msg = `<b>CHUẨN BỊ MỞ SLOT!</b>\n\n`;
+          msg += `⏱ <b>Thời gian dự kiến:</b> ${timeStr}\n`;
+          
+          const postUrl = `https://www.threads.net/@${TARGET_USERNAME}/post/${post.code}`;
+          const replyMarkup = {
+            inline_keyboard: [
+              [{ text: 'Xem bài viết thông báo', url: postUrl }]
+            ]
+          };
+          await sendTelegramMessage(msg, replyMarkup);
+        }
       }
 
       scanState.scanned_posts[post.code] = {
@@ -411,11 +417,11 @@ async function main() {
       logInfo(`🎯 Sắp đến giờ G! Đang đợi ${Math.round(timeDiff / 1000 / 60)} phút nữa tới thời khắc vàng...`);
       await delay(timeDiff); // NGỦ ĐÔNG CHỜ ĐẾN GIỜ G
 
-      logSuccess(`🔥 GIỜ G ĐÃ ĐIỂM! KÍCH HOẠT SNIPER MODE TRONG 5 PHÚT!`);
-      const sniperEndTime = Date.now() + 5 * 60 * 1000;
+      logSuccess(`🔥 GIỜ G ĐÃ ĐIỂM! KÍCH HOẠT SNIPER MODE TRONG 60 PHÚT!`);
+      const sniperEndTime = Date.now() + 60 * 60 * 1000;
       
       while (Date.now() < sniperEndTime) {
-        logInfo(`  -> Bắn tỉa: đang quét bài viết...`);
+        logInfo(`  -> Bắn tỉa: đang quét bài viết... (Còn ${Math.round((sniperEndTime - Date.now())/1000)}s)`);
         const found = await runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames);
         if (found > 0) {
           logSuccess(`🎯 SNIPER THÀNH CÔNG! Đã bắt được Celeb! Kết thúc Sniper Mode.`);
@@ -428,7 +434,7 @@ async function main() {
       }
 
       if (!scanState.sniper_completed) {
-        logWarning(`😢 Hết 5 phút Sniper Mode nhưng không bắt được Celeb nào.`);
+        logWarning(`😢 Hết 60 phút Sniper Mode nhưng không bắt được Celeb nào.`);
         scanState.sniper_completed = true;
       }
     } else if (timeDiff < 0 && timeDiff > -2 * 60 * 60 * 1000) {
