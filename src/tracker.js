@@ -471,7 +471,7 @@ async function main() {
       else if (c.source_type === 'caption') sourceTextStr = 'Threads (bài viết)';
       else sourceTextStr = c.source_type;
 
-      let msg = c.is_update ? `<b>CELEB_TRACKER CELEBRITY TĂNG SLOT!</b>\n\n` : `<b>CELEB_TRACKER CELEBRITY MỚI!</b>\n\n`;
+      let msg = c.is_update ? `<b>CELEBRITY TĂNG SLOT!</b>\n\n` : `<b>CELEBRITY MỚI!</b>\n\n`;
       msg += `👤 <b>Tên:</b> ${c.display_name}\n`;
       msg += `🎫 <b>Slot:</b> ${c.slot_limit ? c.slot_limit.toLocaleString('en-US') : 'Không rõ'}\n`;
       msg += `🆔 <b>Username:</b> @ ${c.username}\n`;
