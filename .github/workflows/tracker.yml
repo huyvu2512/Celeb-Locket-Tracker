@@ -1,0 +1,47 @@
+name: Celeb Locket Tracker
+
+on:
+  workflow_dispatch:
+    # Kích hoạt thủ công từ GitHub UI hoặc từ cron-job.org
+    # cron-job.org gọi: POST /repos/{owner}/{repo}/actions/workflows/tracker.yml/dispatches
+
+jobs:
+  track:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Cần quyền push commit
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run tracker
+        env:
+          RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: node src/tracker.js
+
+      - name: Commit và Push nếu có thay đổi
+        run: |
+          git config user.name "Celeb Locket Bot"
+          git config user.email "bot@celeb-locket-tracker.github.io"
+          git add data/celebs.json data/scan_state.json
+          if git diff --staged --quiet; then
+            echo "Không có thay đổi nào cần commit."
+          else
+            TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M UTC")
+            # Đếm số celeb mới từ diff
+            NEW_COUNT=$(git diff --staged data/celebs.json | grep -c '^\+.*"username"' || true)
+            if [ "$NEW_COUNT" -gt "0" ]; then
+              git commit -m "🎉 Phát hiện ${NEW_COUNT} celeb mới [${TIMESTAMP}]"
+            else
+              git commit -m "🔄 Cập nhật trạng thái quét [${TIMESTAMP}]"
+            fi
+            git push
+          fi

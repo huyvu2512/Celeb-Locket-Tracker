@@ -1,0 +1,23 @@
+{
+  "name": "celeb-locket-tracker",
+  "version": "1.0.0",
+  "description": "GitHub Action bot tự động quét Threads @locketcameravn để theo dõi celeb mới trên Locket",
+  "main": "src/tracker.js",
+  "scripts": {
+    "start": "node src/tracker.js",
+    "dry-run": "node src/tracker.js --dry-run"
+  },
+  "keywords": [
+    "locket",
+    "celeb",
+    "tracker",
+    "threads"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "puppeteer": "^25.1.0"
+  }
+}
