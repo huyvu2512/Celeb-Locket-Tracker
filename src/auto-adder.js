@@ -94,15 +94,19 @@ async function autoAddFriends(newCelebs) {
         // Nhập username mới với delay cực thấp
         await delay(200);
         await page.type(searchInputSelector, celeb.username, { delay: 10 });
-        await delay(500); // Đợi React nhận data và hiển thị nút tìm kiếm
+        
+        // Đợi nút Tìm kiếm sáng lên (được phép bấm) thay vì delay cứng
+        await page.waitForFunction(() => {
+          const btns = Array.from(document.querySelectorAll('button'));
+          const searchBtn = btns.find(b => b.textContent.includes('Tìm kiếm'));
+          return searchBtn && !searchBtn.disabled;
+        }, { timeout: 5000 });
 
         // Bấm nút tìm kiếm
         await page.evaluate(() => {
           const btns = Array.from(document.querySelectorAll('button'));
           const searchBtn = btns.find(b => b.textContent.includes('Tìm kiếm'));
-          if (searchBtn && !searchBtn.disabled) {
-            searchBtn.click();
-          }
+          if (searchBtn) searchBtn.click();
         });
 
         // Đợi kết quả hiển thị
