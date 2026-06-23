@@ -38,6 +38,9 @@ const TARGET_USERNAME = Buffer.from('bG9ja2V0Y2FtZXJhdm4=', 'base64').toString()
 /** Tài khoản Threads phụ (Backup) */
 const BACKUP_USERNAME = Buffer.from('bG9ja2V0LmFzaWE=', 'base64').toString();
 
+/** Link có sẵn từ trước (chưa mở), điền vào đây để rình lúc 21h */
+const PRE_EXISTING_LINK = ''; // VD: 'https://locket.cam/username' hoặc 'https://locket.camera/invites/abc'
+
 /** Delay giữa các request (ms) để tránh bị rate limit */
 const REQUEST_DELAY_MS = 1500;
 
@@ -372,6 +375,65 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames,
     scanState.scanned_posts[post.code] = {
       resolved: anyResolved,
     };
+  }
+
+  // ----------------------------------------------------------
+  // 5.5 Luồng 3: Kiểm tra Link có sẵn từ trước
+  // Nếu chưa có celeb nào được add trong vòng quét này
+  // ----------------------------------------------------------
+  if (PRE_EXISTING_LINK && !scanState.pre_existing_resolved && newCelebsFound === 0) {
+    const username = extractUsernameFromAppUrl(PRE_EXISTING_LINK) || 'unknown_pre_existing';
+    const isKnownAndResolved = celebs.some(c => c.username === username && c.invite_url);
+    
+    if (!isKnownAndResolved) {
+      logInfo(`[Luồng 3] Đang rình Link có sẵn từ trước: ${PRE_EXISTING_LINK}`);
+      
+      const currentDelay = isFastMode ? 0 : REQUEST_DELAY_MS;
+      if (currentDelay > 0) await delay(currentDelay);
+      
+      const resolved = await resolveAppLink(PRE_EXISTING_LINK);
+      if (resolved) {
+        // Auto add thần tốc (chỉ chạy nếu lấy được username từ locket.cam)
+        let autoAddResults = null;
+        if (username !== 'unknown_pre_existing' && !DRY_RUN) {
+          if (global.autoAddCount === undefined) global.autoAddCount = 0;
+          if (global.autoAddCount < 2) {
+             logSuccess(`🚀 [SPEED ADD] Gọi Auto-Add ngay lập tức cho Link Có Sẵn (@${username})!`);
+             const { autoAddFriends } = require('./auto-adder');
+             autoAddResults = await autoAddFriends([{ username }]);
+             global.autoAddCount++;
+          }
+        }
+
+        const inviteTokenMatch = resolved.invite_url.match(/invites\/([a-zA-Z0-9]+)/);
+        const inviteToken = inviteTokenMatch ? inviteTokenMatch[1] : null;
+        
+        const newCeleb = {
+          username: username !== 'unknown_pre_existing' ? username : (resolved.display_name || 'unknown'),
+          display_name: resolved.display_name || username,
+          app_cam_url: PRE_EXISTING_LINK,
+          invite_url: resolved.invite_url,
+          invite_token: inviteToken,
+          slot_limit: resolved.slot_limit,
+          found_at: new Date().toISOString(),
+          source_post_code: 'PRE_EXISTING',
+          source_type: 'Luồng 3 (Link có sẵn)',
+          auto_add_results: autoAddResults,
+        };
+
+        celebs.push(newCeleb);
+        newlyFoundCelebs.push(newCeleb);
+        if (username !== 'unknown_pre_existing') knownUsernames.add(username);
+        newCelebsFound++;
+        
+        scanState.pre_existing_resolved = true;
+        logSuccess(`  🎉 CELEB MỚI TỪ LUỒNG 3: ${resolved.invite_url}`);
+      } else {
+        logWarning(`  [Luồng 3] Link có sẵn vẫn chưa mở (Báo 404)`);
+      }
+    } else {
+      scanState.pre_existing_resolved = true;
+    }
   }
 
   // ----------------------------------------------------------
