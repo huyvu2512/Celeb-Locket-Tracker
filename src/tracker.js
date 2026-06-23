@@ -35,6 +35,9 @@ const {
 /** Tài khoản Threads cần quét */
 const TARGET_USERNAME = Buffer.from('bG9ja2V0Y2FtZXJhdm4=', 'base64').toString();
 
+/** Tài khoản Threads phụ (Backup) */
+const BACKUP_USERNAME = 'locket.asia';
+
 /** Delay giữa các request (ms) để tránh bị rate limit */
 const REQUEST_DELAY_MS = 1500;
 
@@ -45,7 +48,7 @@ const DRY_RUN = process.argv.includes('--dry-run');
 // Logic chính
 // ============================================================
 
-async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames, isFastMode = false) {
+async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames, isFastMode = false, includeBackup = false) {
   let newCelebsFound = 0;
 
   // 2. Quét trang profile
@@ -111,6 +114,30 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames,
 
   logInfo(`Số bài cần quét: ${postsToScan.length} (trong tổng ${profilePosts.length} bài trên profile)`);
 
+  // 3.5 Quét trang phụ (Backup Page) nếu được yêu cầu
+  if (includeBackup) {
+    try {
+      const backupPosts = await fetchProfilePosts(BACKUP_USERNAME);
+      if (backupPosts && backupPosts.length > 0) {
+        // Chỉ lấy bài viết MỚI NHẤT của trang phụ
+        const latestBackupPost = backupPosts[0];
+        latestBackupPost.reason = 'BACKUP PAGE (Mới nhất)';
+        latestBackupPost.author = BACKUP_USERNAME; // Đánh dấu author để fetch đúng url
+        
+        const isResolved = scanState.scanned_posts[latestBackupPost.code] && scanState.scanned_posts[latestBackupPost.code].resolved;
+        if (!isResolved) {
+          if (!scanState.scanned_posts[latestBackupPost.code]) {
+            scanState.scanned_posts[latestBackupPost.code] = { resolved: false };
+          }
+          postsToScan.push(latestBackupPost);
+          logInfo(`[Backup] Bổ sung bài mới nhất của @${BACKUP_USERNAME} (${latestBackupPost.code}) vào danh sách quét.`);
+        }
+      }
+    } catch (err) {
+      logWarning(`[Backup] Không thể quét trang phụ @${BACKUP_USERNAME}: ${err.message}`);
+    }
+  }
+
   if (postsToScan.length === 0) {
     logInfo('Không có bài mới cần quét. Cập nhật timestamp và kết thúc.');
     return newCelebsFound;
@@ -130,7 +157,8 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames,
 
     let postDetails;
     try {
-      postDetails = await fetchPostDetails(TARGET_USERNAME, post.code);
+      const postAuthor = post.author || TARGET_USERNAME;
+      postDetails = await fetchPostDetails(postAuthor, post.code);
     } catch (err) {
       logError(`  Lỗi khi quét post ${post.code}: ${err.message}`);
       // Đánh dấu chưa resolve để quét lại lần sau
@@ -528,7 +556,7 @@ async function main() {
         const isFastMode = minutesPassed <= 10;
         
         logInfo(`  -> Bắn tỉa: đang quét bài viết... (Còn ${Math.round((sniperEndTime - Date.now())/1000)}s) [FastMode: ${isFastMode}]`);
-        const found = await runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames, isFastMode);
+        const found = await runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames, isFastMode, true);
         if (newlyFoundCelebs.some(c => c.invite_url !== null)) {
           logSuccess(`🎯 SNIPER THÀNH CÔNG! Đã lấy được link Invite! Kết thúc Sniper Mode.`);
           newCelebsFound += found;
