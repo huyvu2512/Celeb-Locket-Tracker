@@ -626,7 +626,8 @@ async function main() {
           newCelebsFound += found;
         }
         if (isFastMode) {
-          logInfo(`  -> [10p đầu] Chưa thấy link. Spam quét lại NGAY LẬP TỨC...`);
+          logInfo(`  -> [10p đầu] Chưa thấy link. Spam quét lại NGAY LẬP TỨC (delay 0.5s để chống block IP)...`);
+          await delay(500); // Thêm 500ms delay để tránh bị Cloudflare/Instagram ban IP vì request quá nhanh
         } else {
           logInfo(`  -> Chưa thấy link. Chờ 5 giây rồi quét lại...`);
           await delay(5000); // Rình 5 giây 1 lần
