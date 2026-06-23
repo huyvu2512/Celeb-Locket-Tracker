@@ -180,7 +180,7 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames,
 
     // Nguồn 2: Bình luận của @appcameravn (chỉ chính chủ)
     for (const reply of postDetails.replies) {
-      if (reply.author === TARGET_USERNAME) {
+      if (reply.author === postAuthor) {
         const replyLinks = extractAppCamLinks(reply.text);
         for (const url of replyLinks) {
           foundTargets.push({ url, sourceType: 'reply', text: reply.text });
