@@ -193,7 +193,7 @@ async function sendTelegramMessage(text, replyMarkup = null) {
   }
 }
 
-function extractDropTime(text) {
+function extractDropTime(text, takenAtMs = Date.now()) {
   if (!text) return null;
   text = text.toLowerCase();
 
@@ -202,7 +202,6 @@ function extractDropTime(text) {
   
   if (matches.length === 0) return null;
 
-  // Lấy cụm thời gian cuối cùng trong bài viết vì thường thời gian chốt lịch sẽ nằm ở cuối
   const bestMatch = matches[matches.length - 1];
 
   let hour = parseInt(bestMatch[1], 10);
@@ -218,22 +217,27 @@ function extractDropTime(text) {
   } else {
     if (hour >= 1 && hour <= 11) {
       if (!text.includes('sáng')) {
-        hour += 12; // Mặc định giờ nhỏ (1-11) là chiều/tối nếu không ghi rõ
+        hour += 12;
       }
     }
   }
 
   if (hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59) {
-    // Tạo mốc thời gian dựa trên giờ Việt Nam (UTC+7)
-    // Server có thể chạy ở múi giờ khác, nên ta dùng ISO string để ép múi giờ +07:00
-    const vnDateStr = new Date(Date.now() + 7 * 3600 * 1000).toISOString().split('T')[0];
-    const isoStr = `${vnDateStr}T${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:00+07:00`;
+    // Dùng thời gian đăng bài (takenAtMs) làm gốc để tính "hôm nay", thay vì Date.now()
+    const baseDateVn = new Date(takenAtMs + 7 * 3600 * 1000).toISOString().split('T')[0];
+    const isoStr = `${baseDateVn}T${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:00+07:00`;
     const d = new Date(isoStr);
     
-    // Nếu giờ đã qua hơn 2 tiếng, có thể là lịch của ngày mai
-    if (d.getTime() < Date.now() - 2 * 60 * 60 * 1000) {
+    // Nếu giờ trích xuất < giờ đăng bài (kèm sai số 2h), nghĩa là họ đang nói đến ngày mai
+    if (d.getTime() < takenAtMs - 2 * 60 * 60 * 1000) {
        d.setDate(d.getDate() + 1);
     }
+    
+    // Nếu giờ vàng ĐÃ TRÔI QUA so với HIỆN TẠI (VD bài hôm qua nói 21h hôm qua), thì bỏ qua luôn!
+    if (d.getTime() <= Date.now()) {
+       return null;
+    }
+
     return d.toISOString();
   }
 

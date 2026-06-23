@@ -168,7 +168,7 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames)
         const postAgeHours = (Date.now() - postTimeMs) / (1000 * 60 * 60);
 
         if (postAgeHours <= 24) {
-          const dropTime = extractDropTime(postDetails.caption || '');
+          const dropTime = extractDropTime(postDetails.caption || '', postTimeMs);
           if (dropTime && scanState.sniper_target_time !== dropTime) {
             scanState.sniper_target_time = dropTime;
             scanState.sniper_trigger_code = post.code;
