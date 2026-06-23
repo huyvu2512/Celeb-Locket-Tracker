@@ -220,77 +220,122 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames)
         continue;
       }
 
+      const existingCeleb = celebs.find(c => c.username === username);
+      const isKnown = !!existingCeleb;
+      const isKnownAndResolved = isKnown && !!existingCeleb.invite_url;
+
       // ----------------------------------------------------------
       // AUTO-ADD THẦN TỐC TRƯỚC KHI LÀM BẤT CỨ VIỆC GÌ KHÁC!
       // Giới hạn tối đa 2 lần/run để tránh bị ban tài khoản
       // ----------------------------------------------------------
       let autoAddResults = null;
-      if (!knownUsernames.has(username) && !DRY_RUN) {
+      if (!isKnown && !DRY_RUN) {
         if (global.autoAddCount === undefined) global.autoAddCount = 0;
         
         if (global.autoAddCount < 2) {
-          logSuccess(`🚀 [SPEED ADD] Gọi Auto-Add ngay lập tức cho @${username} trước khi lấy link invite!`);
+          logSuccess(`🚀 [SPEED ADD] Gọi Auto-Add ngay lập tức cho @${username} (Bất chấp 404)!`);
           const { autoAddFriends } = require('./auto-adder');
           autoAddResults = await autoAddFriends([{ username }]);
           global.autoAddCount++;
         } else {
-          logWarning(`⚠️ Đã đạt giới hạn Auto-Add (2 lần/run) để chống ban. Bỏ qua Auto-Add cho @${username}`);
+          logWarning(`⚠️ Đã đạt giới hạn Auto-Add (2 lần/run). Bỏ qua Auto-Add cho @${username}`);
         }
       }
 
-      // Resolve invite link
-      await delay(REQUEST_DELAY_MS);
+      const threadsDisplayName = extractDisplayNameFromText(sourceText);
 
-      const resolved = await resolveAppLink(appUrl);
-      if (!resolved) {
-        logWarning(`  Không resolve được ${appUrl}`);
-        continue;
-      }
+      // Chỉ gọi request phân tích link nếu chưa có invite_url
+      if (!isKnownAndResolved) {
+        await delay(REQUEST_DELAY_MS);
+        const resolved = await resolveAppLink(appUrl);
 
-      const inviteTokenMatch = resolved.invite_url.match(/invites\/([^?]+)/);
-      const inviteToken = inviteTokenMatch ? inviteTokenMatch[1] : null;
-
-      if (knownUsernames.has(username)) {
-        const existingCeleb = celebs.find(c => c.username === username);
-        if (existingCeleb && resolved.slot_limit && existingCeleb.slot_limit && resolved.slot_limit > existingCeleb.slot_limit) {
-          logSuccess(`  🆙 TĂNG SLOT: @${username} mở thêm slot (${existingCeleb.slot_limit} -> ${resolved.slot_limit})`);
-          existingCeleb.slot_limit = resolved.slot_limit;
-          existingCeleb.found_at = new Date().toISOString();
+        if (!resolved) {
+          logWarning(`  Không resolve được ${appUrl} (Lỗi 404 hoặc Timeout)`);
           
-          newlyFoundCelebs.push({ ...existingCeleb, is_update: true });
+          if (!isKnown) {
+            logWarning(`  ⚠️ CELEB MỚI NHƯNG LỖI 404: @${username}. Đang lưu tạm để add tự động và lấy link sau.`);
+            const displayName = threadsDisplayName || username;
+            const newCeleb = {
+              username: username,
+              display_name: displayName,
+              app_cam_url: appUrl,
+              invite_url: null, // Chưa có link
+              invite_token: 'lỗi 404',
+              slot_limit: 'Không rõ',
+              found_at: new Date((post.taken_at || postDetails.taken_at || (Date.now() / 1000)) * 1000).toISOString(),
+              source_post_code: post.code,
+              source_type: sourceType,
+              auto_add_results: autoAddResults,
+            };
+            celebs.push(newCeleb);
+            newlyFoundCelebs.push(newCeleb); // Gửi thông báo lần 1 (lỗi 404)
+            knownUsernames.add(username);
+            newCelebsFound++;
+          }
+          // KHÔNG set anyResolved = true để post này tiếp tục được quét lại
+          continue;
+        }
+
+        // Đã resolve thành công!
+        const inviteTokenMatch = resolved.invite_url.match(/invites\/([^?]+)/);
+        const inviteToken = inviteTokenMatch ? inviteTokenMatch[1] : null;
+
+        if (isKnown) {
+          // TRƯỜNG HỢP: Trước đó bị 404, giờ mới LẤY ĐƯỢC LINK (Recovery)
+          logSuccess(`  🎉 ĐÃ LẤY ĐƯỢC LINK CHO CELEB BỊ 404 TỪ TRƯỚC: @${username}`);
+          existingCeleb.invite_url = resolved.invite_url;
+          existingCeleb.invite_token = inviteToken;
+          existingCeleb.slot_limit = resolved.slot_limit;
+          existingCeleb.display_name = threadsDisplayName || resolved.display_name || username;
+          
+          newlyFoundCelebs.push({ ...existingCeleb, is_link_recovery: true });
           newCelebsFound++;
-        } else {
-          logInfo(`  Celeb @${username} đã tồn tại và không tăng slot, bỏ qua.`);
+          anyResolved = true;
+          continue;
+        }
+
+        // Trường hợp: Hoàn toàn mới và lấy link thành công ngay lập tức!
+        const displayName = threadsDisplayName || resolved.display_name || username;
+
+        const newCeleb = {
+          username: username,
+          display_name: displayName,
+          app_cam_url: appUrl,
+          invite_url: resolved.invite_url,
+          invite_token: inviteToken,
+          slot_limit: resolved.slot_limit,
+          found_at: new Date((post.taken_at || postDetails.taken_at || (Date.now() / 1000)) * 1000).toISOString(),
+          source_post_code: post.code,
+          source_type: sourceType,
+          auto_add_results: autoAddResults,
+        };
+
+        celebs.push(newCeleb);
+        newlyFoundCelebs.push(newCeleb);
+        knownUsernames.add(username);
+        anyResolved = true;
+        newCelebsFound++;
+
+        logSuccess(`  🎉 CELEB MỚI: @${username} (${displayName})`);
+        logSuccess(`     Invite: ${resolved.invite_url}`);
+      } else {
+        // Trường hợp: Đã biết và đã có link -> Chỉ check xem có tăng slot hay không
+        await delay(REQUEST_DELAY_MS);
+        const resolved = await resolveAppLink(appUrl);
+        if (resolved) {
+          if (resolved.slot_limit && existingCeleb.slot_limit && resolved.slot_limit > existingCeleb.slot_limit) {
+            logSuccess(`  🆙 TĂNG SLOT: @${username} mở thêm slot (${existingCeleb.slot_limit} -> ${resolved.slot_limit})`);
+            existingCeleb.slot_limit = resolved.slot_limit;
+            existingCeleb.found_at = new Date().toISOString();
+            
+            newlyFoundCelebs.push({ ...existingCeleb, is_update: true });
+            newCelebsFound++;
+          } else {
+            logInfo(`  Celeb @${username} đã tồn tại và không tăng slot, bỏ qua.`);
+          }
         }
         anyResolved = true;
-        continue;
       }
-
-      // Ưu tiên trích xuất tên riêng từ text chứa link (không lấy của caption bài viết chính nếu là comment)
-      const threadsDisplayName = extractDisplayNameFromText(sourceText);
-      const displayName = threadsDisplayName || resolved.display_name || username;
-
-      const newCeleb = {
-        username: username,
-        display_name: displayName,
-        app_cam_url: appUrl,
-        invite_url: resolved.invite_url,
-        invite_token: inviteToken,
-        slot_limit: resolved.slot_limit,
-        found_at: new Date((post.taken_at || postDetails.taken_at || (Date.now() / 1000)) * 1000).toISOString(),
-        source_post_code: post.code,
-        source_type: sourceType,
-        auto_add_results: autoAddResults,
-      };
-
-      celebs.push(newCeleb);
-      newlyFoundCelebs.push(newCeleb);
-      knownUsernames.add(username);
-      anyResolved = true;
-      newCelebsFound++;
-
-      logSuccess(`  🎉 CELEB MỚI: @${username} (${displayName})`);
-      logSuccess(`     Invite: ${resolved.invite_url}`);
     }
 
     // Cập nhật trạng thái post
@@ -537,11 +582,11 @@ async function main() {
       msg += `⏱ <b>Thời gian:</b> ${timeStr}\n`;
       msg += `📍 <b>Nguồn:</b> ${sourceTextStr}\n`;
       
-      const replyMarkup = {
+      const replyMarkup = c.invite_url ? {
         inline_keyboard: [
           [{ text: `➕ Kết bạn với ${c.display_name}`, url: c.invite_url }]
         ]
-      };
+      } : null;
       
       await sendTelegramMessage(msg, replyMarkup);
       await delay(500); // Tránh rate limit của Telegram khi gửi nhiều
