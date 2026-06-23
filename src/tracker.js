@@ -439,6 +439,11 @@ async function main() {
     last_ig_scan_signature: null,
     scanned_posts: {},
   });
+  
+  // Đảm bảo scanned_posts luôn là object để tránh lỗi crash khi file JSON bị xóa trắng thành {}
+  if (!scanState.scanned_posts) {
+    scanState.scanned_posts = {};
+  }
 
   const newlyFoundCelebs = [];
   const knownUsernames = new Set(celebs.map(c => c.username));
