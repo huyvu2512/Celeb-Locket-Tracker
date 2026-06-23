@@ -35,12 +35,21 @@ const THREADS_HEADERS = {
  */
 function extractAppCamLinks(text) {
   if (!text) return [];
-  const regex = new RegExp(`https?://${Buffer.from('bG9ja2V0LmNhbQ==', 'base64').toString()}/([a-zA-Z0-9_.]+)`, 'gi');
   const matches = [];
+
+  // 1. Dạng link ngắn: locket.cam/[username]
+  const regex1 = new RegExp(`https?://${Buffer.from('bG9ja2V0LmNhbQ==', 'base64').toString()}/([a-zA-Z0-9_.]+)`, 'gi');
   let match;
-  while ((match = regex.exec(text)) !== null) {
+  while ((match = regex1.exec(text)) !== null) {
     matches.push(match[0]);
   }
+
+  // 2. Dạng link trực tiếp: locket.camera/invites/[token]?type=UsernameLink
+  const regex2 = new RegExp(`https?://${Buffer.from('bG9ja2V0LmNhbWVyYQ==', 'base64').toString()}/invites/([a-zA-Z0-9_]+)(\\?type=UsernameLink)?`, 'gi');
+  while ((match = regex2.exec(text)) !== null) {
+    matches.push(match[0]);
+  }
+
   return [...new Set(matches)]; // Loại bỏ trùng lặp
 }
 
