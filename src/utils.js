@@ -123,8 +123,9 @@ function writeJsonFile(filename, data) {
 // ============================================================
 
 function log(message) {
-  const timestamp = new Date().toISOString();
-  console.log(`[${timestamp}] ${message}`);
+  const vnTime = new Date(Date.now() + 7 * 60 * 60 * 1000);
+  const formatted = vnTime.toISOString().replace('Z', '').replace('T', ' ') + '+07:00';
+  console.log(`[${formatted}] ${message}`);
 }
 
 function logSuccess(message) {

@@ -54,6 +54,34 @@ const DRY_RUN = process.argv.includes('--dry-run');
 async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames, isFastMode = false, includeBackup = false) {
   let newCelebsFound = 0;
 
+  // 1. Phục hồi Token cho Celeb bị 404 (Auto-Retry)
+  // ----------------------------------------------------------
+  for (const existingCeleb of celebs) {
+    if (existingCeleb.invite_url === null) {
+      logInfo(`[Recovery] Đang thử lấy lại link cho Celeb bị lỗi 404 từ trước: @${existingCeleb.username}...`);
+      const currentDelay = isFastMode ? 0 : REQUEST_DELAY_MS;
+      if (currentDelay > 0) await delay(currentDelay);
+
+      const resolved = await resolveAppLink(existingCeleb.app_cam_url);
+      if (resolved) {
+        logSuccess(`  🎉 ĐÃ LẤY ĐƯỢC LINK CHO CELEB BỊ 404 TỪ TRƯỚC: @${existingCeleb.username}`);
+        
+        const inviteTokenMatch = resolved.invite_url.match(/invites\/([^?]+)/);
+        existingCeleb.invite_url = resolved.invite_url;
+        existingCeleb.invite_token = inviteTokenMatch ? inviteTokenMatch[1] : null;
+        existingCeleb.slot_limit = resolved.slot_limit;
+        if (resolved.display_name) {
+          existingCeleb.display_name = resolved.display_name;
+        }
+
+        newlyFoundCelebs.push({ ...existingCeleb, is_link_recovery: true });
+        newCelebsFound++;
+      } else {
+        logWarning(`  ⚠️ Vẫn lỗi 404 cho @${existingCeleb.username}, sẽ thử lại sau.`);
+      }
+    }
+  }
+
   // 2. Quét trang profile
   // ----------------------------------------------------------
   let profilePosts;
@@ -293,6 +321,7 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames,
               invite_token: 'lỗi 404',
               slot_limit: 'Không rõ',
               found_at: new Date((post.taken_at || postDetails.taken_at || (Date.now() / 1000)) * 1000).toISOString(),
+              bot_action_time: new Date().toISOString(),
               source_post_code: post.code,
               source_type: sourceType,
               auto_add_results: autoAddResults,
@@ -335,6 +364,7 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames,
           invite_token: inviteToken,
           slot_limit: resolved.slot_limit,
           found_at: new Date((post.taken_at || postDetails.taken_at || (Date.now() / 1000)) * 1000).toISOString(),
+          bot_action_time: new Date().toISOString(),
           source_post_code: post.code,
           source_type: sourceType,
           auto_add_results: autoAddResults,
@@ -413,6 +443,7 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames,
           invite_token: inviteToken,
           slot_limit: resolved.slot_limit,
           found_at: new Date().toISOString(),
+          bot_action_time: new Date().toISOString(),
           source_post_code: 'PRE_EXISTING',
           source_type: 'Link có sẵn',
           auto_add_results: autoAddResults,
@@ -659,9 +690,12 @@ async function main() {
     logSuccess(`Tổng cộng tìm thấy ${newCelebsFound} celeb mới!`);
 
     for (const c of newlyFoundCelebs) {
-      // Chuyển đổi định dạng thời gian cho đẹp
-      const d = new Date(c.found_at);
-      const timeStr = `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')} ${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
+      // Chuyển đổi định dạng thời gian cho đẹp (UTC+7)
+      const d = new Date(new Date(c.found_at).getTime() + 7 * 60 * 60 * 1000);
+      const postTimeStr = `${d.getUTCHours().toString().padStart(2, '0')}:${d.getUTCMinutes().toString().padStart(2, '0')}:${d.getUTCSeconds().toString().padStart(2, '0')} ${d.getUTCDate().toString().padStart(2, '0')}/${(d.getUTCMonth() + 1).toString().padStart(2, '0')}/${d.getUTCFullYear()}`;
+
+      const b = new Date(new Date(c.bot_action_time || Date.now()).getTime() + 7 * 60 * 60 * 1000);
+      const botTimeStr = `${b.getUTCHours().toString().padStart(2, '0')}:${b.getUTCMinutes().toString().padStart(2, '0')}:${b.getUTCSeconds().toString().padStart(2, '0')}`;
 
       let sourceTextStr = '';
       if (c.source_type === 'ig_story') sourceTextStr = 'Instagram (tin)';
@@ -676,7 +710,8 @@ async function main() {
       if (c.invite_token) {
         msg += `🔑 <b>Token:</b> <code>${c.invite_token}</code>\n`;
       }
-      msg += `⏱ <b>Thời gian:</b> ${timeStr}\n`;
+      msg += `🕒 <b>Giờ đăng bài:</b> ${postTimeStr}\n`;
+      msg += `⚡ <b>Giờ vồ mồi:</b> ${botTimeStr}\n`;
       msg += `📍 <b>Nguồn:</b> ${sourceTextStr}\n`;
 
       const replyMarkup = c.invite_url ? {
@@ -707,7 +742,8 @@ async function main() {
         }
 
         if (shouldSend) {
-          successMsg += `⏱ <b>Thời gian:</b> ${timeStr}\n`;
+          successMsg += `🕒 <b>Giờ đăng bài:</b> ${postTimeStr}\n`;
+          successMsg += `⚡ <b>Giờ vồ mồi:</b> ${botTimeStr}\n`;
           await sendTelegramMessage(successMsg);
           await delay(500);
         }
