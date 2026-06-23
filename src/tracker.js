@@ -156,8 +156,8 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames,
     if (currentDelay > 0) await delay(currentDelay);
 
     let postDetails;
+    let postAuthor = post.author || TARGET_USERNAME;
     try {
-      const postAuthor = post.author || TARGET_USERNAME;
       postDetails = await fetchPostDetails(postAuthor, post.code);
     } catch (err) {
       logError(`  Lỗi khi quét post ${post.code}: ${err.message}`);
