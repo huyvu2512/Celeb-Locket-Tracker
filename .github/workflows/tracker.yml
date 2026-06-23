@@ -9,6 +9,9 @@ jobs:
   track:
     name: Cập nhật dữ liệu Celeb Tracker
     runs-on: ubuntu-latest
+    concurrency:
+      group: tracker-bot
+      cancel-in-progress: false
     permissions:
       contents: write  # Cần quyền push commit
 
