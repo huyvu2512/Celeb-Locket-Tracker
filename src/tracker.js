@@ -164,7 +164,7 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames)
       
       // NẾU KHÔNG CÓ LINK CELEB_TRACKER -> TÌM GIỜ VÀNG TRONG CAPTION!
       if (!scanState.scanned_posts[post.code]?.resolved) {
-        const dropTime = extractDropTime(post.caption || '');
+        const dropTime = extractDropTime(postDetails.caption || '');
         if (dropTime && scanState.sniper_target_time !== dropTime) {
           scanState.sniper_target_time = dropTime;
           scanState.sniper_trigger_code = post.code;
