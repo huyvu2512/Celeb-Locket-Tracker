@@ -393,7 +393,7 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames,
       
       const resolved = await resolveAppLink(PRE_EXISTING_LINK);
       if (resolved) {
-        // Auto add thần tốc (chỉ chạy nếu lấy được username từ locket.cam)
+        // Auto add thần tốc (chỉ chạy nếu lấy được username từ app.cam)
         let autoAddResults = null;
         if (username !== 'unknown_pre_existing' && !DRY_RUN) {
           if (global.autoAddCount === undefined) global.autoAddCount = 0;
@@ -417,7 +417,7 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames,
           slot_limit: resolved.slot_limit,
           found_at: new Date().toISOString(),
           source_post_code: 'PRE_EXISTING',
-          source_type: 'Luồng 3 (Link có sẵn)',
+          source_type: 'Link có sẵn',
           auto_add_results: autoAddResults,
         };
 
