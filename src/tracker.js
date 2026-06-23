@@ -39,7 +39,7 @@ const TARGET_USERNAME = Buffer.from('bG9ja2V0Y2FtZXJhdm4=', 'base64').toString()
 const BACKUP_USERNAME = Buffer.from('bG9ja2V0LmFzaWE=', 'base64').toString();
 
 /** Link có sẵn từ trước (chưa mở), điền vào đây để rình lúc 21h */
-const PRE_EXISTING_LINK = 'https://locket.cam/myqnam0310';
+const PRE_EXISTING_LINK = '';
 
 /** Delay giữa các request (ms) để tránh bị rate limit */
 const REQUEST_DELAY_MS = 1500;
