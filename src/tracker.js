@@ -113,10 +113,6 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames)
 
   if (postsToScan.length === 0) {
     logInfo('Không có bài mới cần quét. Cập nhật timestamp và kết thúc.');
-    scanState.last_scan = new Date().toISOString();
-    if (!DRY_RUN) {
-      writeJsonFile('scan_state.json', scanState);
-    }
     return newCelebsFound;
   }
 
@@ -565,6 +561,7 @@ async function main() {
   }
 
   if (!DRY_RUN) {
+    scanState.last_scan = new Date().toISOString();
     celebs.forEach(c => delete c.auto_add_results);
     writeJsonFile('celebs.json', celebs);
     writeJsonFile('scan_state.json', scanState);

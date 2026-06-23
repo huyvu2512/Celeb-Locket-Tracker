@@ -197,14 +197,17 @@ function extractDropTime(text) {
   if (!text) return null;
   text = text.toLowerCase();
 
-  const timeRegex = /(?:lúc|vào|khoảng|tới)?\s*(\d{1,2})(?:h|g|:)(\d{2})?\s*(sáng|trưa|chiều|tối)?/i;
-  const match = text.match(timeRegex);
+  const timeRegex = /(?:lúc|vào|khoảng|tới)?\s*(\d{1,2})(?:h|g|:)(\d{2})?\s*(sáng|trưa|chiều|tối)?/gi;
+  let matches = [...text.matchAll(timeRegex)];
+  
+  if (matches.length === 0) return null;
 
-  if (!match) return null;
+  // Lấy cụm thời gian cuối cùng trong bài viết vì thường thời gian chốt lịch sẽ nằm ở cuối
+  const bestMatch = matches[matches.length - 1];
 
-  let hour = parseInt(match[1], 10);
-  const minute = match[2] ? parseInt(match[2], 10) : 0;
-  const period = match[3] || ''; 
+  let hour = parseInt(bestMatch[1], 10);
+  const minute = bestMatch[2] ? parseInt(bestMatch[2], 10) : 0;
+  const period = bestMatch[3] || ''; 
 
   if (period === 'chiều' || period === 'tối') {
     if (hour < 12) hour += 12;
@@ -215,17 +218,19 @@ function extractDropTime(text) {
   } else {
     if (hour >= 1 && hour <= 11) {
       if (!text.includes('sáng')) {
-        hour += 12;
+        hour += 12; // Mặc định giờ nhỏ (1-11) là chiều/tối nếu không ghi rõ
       }
     }
   }
 
   if (hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59) {
-    const d = new Date();
-    d.setHours(hour, minute, 0, 0);
-    // Nếu giờ trích xuất đã qua so với giờ hiện tại (VD: hiện tại 22h, tìm thấy 9h sáng), 
-    // có thể đó là giờ của ngày mai.
-    // Tạm thời, cứ lấy giờ trong ngày hôm nay. Nếu nhỏ hơn giờ hiện tại > 2 tiếng thì cộng thêm 1 ngày.
+    // Tạo mốc thời gian dựa trên giờ Việt Nam (UTC+7)
+    // Server có thể chạy ở múi giờ khác, nên ta dùng ISO string để ép múi giờ +07:00
+    const vnDateStr = new Date(Date.now() + 7 * 3600 * 1000).toISOString().split('T')[0];
+    const isoStr = `${vnDateStr}T${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:00+07:00`;
+    const d = new Date(isoStr);
+    
+    // Nếu giờ đã qua hơn 2 tiếng, có thể là lịch của ngày mai
     if (d.getTime() < Date.now() - 2 * 60 * 60 * 1000) {
        d.setDate(d.getDate() + 1);
     }
