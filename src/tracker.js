@@ -36,7 +36,7 @@ const {
 const TARGET_USERNAME = Buffer.from('bG9ja2V0Y2FtZXJhdm4=', 'base64').toString();
 
 /** Tài khoản Threads phụ (Backup) */
-const BACKUP_USERNAME = 'locket.asia';
+const BACKUP_USERNAME = Buffer.from('bG9ja2V0LmFzaWE=', 'base64').toString();
 
 /** Delay giữa các request (ms) để tránh bị rate limit */
 const REQUEST_DELAY_MS = 1500;
