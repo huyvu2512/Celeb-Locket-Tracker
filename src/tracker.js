@@ -759,7 +759,26 @@ async function main() {
   if (newCelebsFound > 0) {
     logSuccess(`Tổng cộng tìm thấy ${newCelebsFound} celeb mới!`);
 
+    // Dedup newlyFoundCelebs: cùng username → giữ lại cái có invite_url đầy đủ nhất
+    const seenUsernames = new Map();
     for (const c of newlyFoundCelebs) {
+      const key = c.username;
+      if (!seenUsernames.has(key)) {
+        seenUsernames.set(key, c);
+      } else {
+        const prev = seenUsernames.get(key);
+        // Ưu tiên bản có invite_url thật (không phải null/lỗi 404)
+        if (!prev.invite_url && c.invite_url) {
+          seenUsernames.set(key, c);
+        }
+      }
+    }
+    const dedupedCelebs = Array.from(seenUsernames.values());
+    if (dedupedCelebs.length < newlyFoundCelebs.length) {
+      logInfo(`[Dedup] Đã lọc ${newlyFoundCelebs.length - dedupedCelebs.length} thông báo trùng lặp.`);
+    }
+
+    for (const c of dedupedCelebs) {
       // Chuyển đổi định dạng thời gian cho đẹp (UTC+7)
       const d = new Date(new Date(c.found_at).getTime() + 7 * 60 * 60 * 1000);
       const postTimeStr = `${d.getUTCHours().toString().padStart(2, '0')}:${d.getUTCMinutes().toString().padStart(2, '0')}:${d.getUTCSeconds().toString().padStart(2, '0')} ${d.getUTCDate().toString().padStart(2, '0')}/${(d.getUTCMonth() + 1).toString().padStart(2, '0')}/${d.getUTCFullYear()}`;
@@ -781,7 +800,7 @@ async function main() {
         msg += `🔑 <b>Token:</b> <code>${c.invite_token}</code>\n`;
       }
       msg += `🕒 <b>Giờ đăng bài:</b> ${postTimeStr}\n`;
-      msg += `⚡ <b>Giờ vồ mồi:</b> ${botTimeStr}\n`;
+      msg += `⚡ <b>Giờ kết bạn:</b> ${botTimeStr}\n`;
       msg += `📍 <b>Nguồn:</b> ${sourceTextStr}\n`;
 
       const replyMarkup = c.invite_url ? {
@@ -815,7 +834,7 @@ async function main() {
 
         if (shouldSendAutoAdd) {
           successMsg += `🕒 <b>Giờ đăng bài:</b> ${postTimeStr}\n`;
-          successMsg += `⚡ <b>Giờ vồ mồi:</b> ${botTimeStr}\n`;
+          successMsg += `⚡ <b>Giờ kết bạn:</b> ${botTimeStr}\n`;
           // Ưu tiên gửi Telegram tiếp (Thông báo Auto-add)
           await sendTelegramMessage(successMsg);
         }
