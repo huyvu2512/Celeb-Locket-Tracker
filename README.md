@@ -60,13 +60,16 @@
  ┃ ┣ 📜 tracker.js          # File thực thi chính - Trái tim của toàn bộ hệ thống
  ┃ ┣ 📜 threads-scraper.js  # Tool cạo dữ liệu ẩn danh từ mạng xã hội Threads 
  ┃ ┣ 📜 insta-scraper.js    # Tương tác với Instagram API thông qua RapidAPI
- ┃ ┣ 📜 link-resolver.js  # Trích xuất dữ liệu từ deep-link của Celeb Tracker
+ ┃ ┣ 📜 link-resolver.js    # Trích xuất dữ liệu từ deep-link của Celeb Tracker
  ┃ ┣ 📜 auto-adder.js       # Module tự động đăng nhập Web Dio và kết bạn
- ┃ ┗ 📜 utils.js            # Các hàm hỗ trợ dùng chung (I/O, bóc tách thời gian, gửi Telegram...)
+ ┃ ┗ 📜 utils.js            # Các hàm hỗ trợ dùng chung (I/O, bóc tách thời gian, gửi Telegram, Discord...)
  ┣ 📂 .github/workflows
  ┃ ┗ 📜 tracker.yml         # File cấu hình tự động hoá của Github Actions (CI/CD)
  ┣ 📜 package.json
- ┗ 📜 README.md
+ ┣ 📜 README.md
+ ┣ 📜 CONTRIBUTING.md
+ ┣ 📜 SECURITY.md
+ ┗ 🖼️ logo.png             # Logo dự án (hiển thị trên Embed Discord)
 ```
 
 ---
