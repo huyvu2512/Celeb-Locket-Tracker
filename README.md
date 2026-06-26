@@ -8,6 +8,7 @@
 ![Puppeteer](https://img.shields.io/badge/Puppeteer-Browser_Automation-00D8A2?logo=puppeteer&logoColor=black)
 ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-Automated-2088FF?logo=github-actions&logoColor=white)
 ![Telegram](https://img.shields.io/badge/Telegram-Bot_Alerts-2CA5E0?logo=telegram&logoColor=white)
+![Discord](https://img.shields.io/badge/Discord-Webhook_Alerts-5865F2?logo=discord&logoColor=white)
 
 📦 **[GitHub](https://github.com/huyvu2512/Celeb-Tracker)** · 👤 **[Liên hệ](https://beacons.ai/huyvu2512)**
 
@@ -43,7 +44,7 @@
 - **🎯 Sniper Mode (Chế độ Bắn Tỉa):** AI tự động phân tích ngôn ngữ tự nhiên (NLP) từ caption để phát hiện "Giờ Vàng". Khi đến giờ G (nhận diện trước 30 phút), hệ thống tự động khóa mục tiêu và chuyển sang trạng thái "Cuồng nộ": **Spam quét liên tục không độ trễ (0s)** để hớt tay trên mọi slot giới hạn! Bổ sung vòng lặp thần tốc 5 phút quét liên tục cho mọi chu kỳ hoạt động thông thường. Tích hợp **Early Exit** tự ngắt lập tức khi cắn link và khả năng **tự phục hồi** (Auto-Retry) dẻo dai lấy lại link khi gặp lỗi 404.
 - **⚡ Phân tích link siêu tốc:** Phân giải (resolve) trực tiếp link `App.cam` để lấy thông tin chi tiết (avatar, tên, giới hạn slot) theo thời gian thực mà không cần tải ứng dụng.
 - **🤖 Auto-Add Thần Tốc:** Tích hợp trình duyệt ảo tự động đăng nhập Web Dio, nhận diện giao diện và **click kết bạn bằng tọa độ** ngay giây đầu tiên phát hiện Celeb mới. Tự động nhận diện và bỏ qua các trạng thái "Full slot", "Đang xếp hàng", hoặc "Đã là bạn bè".
-- **📱 Cảnh báo Telegram:** Gửi tin nhắn thông báo cực xịn về điện thoại khi săn được Celeb mới, và gửi một báo cáo tách biệt dành riêng cho chiến tích **Auto-Add** thành công!
+- **📱 Hệ thống Cảnh báo Kép (Telegram + Discord):** Gửi tin nhắn thông báo cực xịn về điện thoại qua Telegram và đẩy Embed message tuyệt đẹp (mạ vàng, chia cột thông tin) lên server Discord. Tự động bóc tách 3 luồng báo cáo: Phát hiện Celeb mới, Cảnh báo chuẩn bị mở Slot, và Báo cáo chiến tích **Auto-Add** thành công/thất bại!
 - **🕒 Vận hành Serverless 24/7:** Chạy hoàn toàn miễn phí và tự động thông qua GitHub Actions và bộ hẹn giờ cron-job.
 
 ---
@@ -79,6 +80,7 @@
 | `RAPIDAPI_KEY` | Key API dùng để quét Instagram Stories |
 | `TELEGRAM_BOT_TOKEN` | Token của con bot Telegram do BotFather cung cấp |
 | `TELEGRAM_CHAT_ID` | ID của bạn (hoặc group/channel) để nhận thông báo |
+| `DISCORD_WEBHOOK_URL`| Link Webhook kênh Discord để nhận thông báo (Bắt buộc nếu muốn dùng Discord) |
 | `L_DIO_EMAIL` | Email đăng nhập vào Web Dio (dành cho tính năng Auto-Add) |
 | `L_DIO_PASSWORD` | Mật khẩu đăng nhập vào Web Dio (dành cho tính năng Auto-Add) |
 
