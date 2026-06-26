@@ -234,7 +234,9 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames,
         if (postAgeHours <= 24) {
           const dropTime = extractDropTime(postDetails.caption || '', postTimeMs);
           if (dropTime) {
-            logSuccess(`🎯 PHÁT HIỆN THÔNG BÁO GIỜ VÀNG: ${dropTime} (Sẽ lên lịch nếu có thay đổi)`);
+            if (dropTime !== scanState.sniper_target_time) {
+              logSuccess(`🎯 PHÁT HIỆN GIỜ VÀNG MỚI: ${dropTime}`);
+            }
             newSniperDropTime = dropTime;
             newSniperPostCode = post.code;
             newSniperPostUrl = `https://www.threads.net/@${TARGET_USERNAME}/post/${post.code}`;
@@ -715,7 +717,8 @@ async function main() {
       const loopEndTime = Date.now() + 5 * 60 * 1000;
       
       while (Date.now() < loopEndTime) {
-        const found = await runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames, true, true);
+        // Không cần check backup mỗi vòng, chỉ check lần đầu là đủ
+        const found = await runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames, true, false);
         
         const hasInviteUrl = newlyFoundCelebs.some(c => c.invite_url !== null);
         const hasSpeedAddSuccess = newlyFoundCelebs.some(c => c.auto_add_results && (c.auto_add_results.success || c.auto_add_results.skipped || c.auto_add_results.full));

@@ -285,8 +285,12 @@ async function fetchAllProfilePostsViaPuppeteer(username) {
 
     logInfo(`  Đã kéo đến đáy trang! Tổng cộng tóm được ${postCodes.length} bài viết.`);
     
+    // Chỉ lấy 3 bài mới nhất (giống fetchProfilePosts thông thường)
+    const limitedCodes = postCodes.slice(0, 3);
+    logInfo(`  Đang chọn ${limitedCodes.length} bài mới nhất để quét.`);
+
     // Convert sang mảng posts (thiếu caption/taken_at nhưng không sao vì sẽ tự gọi chi tiết sau)
-    return postCodes.map(code => ({
+    return limitedCodes.map(code => ({
       code: code,
       pk: '',
       caption: '',
