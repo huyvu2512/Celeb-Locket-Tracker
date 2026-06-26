@@ -26,6 +26,7 @@ const {
   delay,
   sendTelegramMessage,
   extractDropTime,
+  getVnTimeISOString,
 } = require('./utils');
 
 // ============================================================
@@ -320,8 +321,8 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames,
               invite_url: null, // Chưa có link
               invite_token: 'lỗi 404',
               slot_limit: 'Không rõ',
-              found_at: new Date((post.taken_at || postDetails.taken_at || (Date.now() / 1000)) * 1000).toISOString(),
-              bot_action_time: new Date().toISOString(),
+              found_at: getVnTimeISOString(new Date((post.taken_at || postDetails.taken_at || (Date.now() / 1000)) * 1000)),
+              bot_action_time: getVnTimeISOString(),
               source_post_code: post.code,
               source_type: sourceType,
               auto_add_results: autoAddResults,
@@ -363,8 +364,8 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames,
           invite_url: resolved.invite_url,
           invite_token: inviteToken,
           slot_limit: resolved.slot_limit,
-          found_at: new Date((post.taken_at || postDetails.taken_at || (Date.now() / 1000)) * 1000).toISOString(),
-          bot_action_time: new Date().toISOString(),
+          found_at: getVnTimeISOString(new Date((post.taken_at || postDetails.taken_at || (Date.now() / 1000)) * 1000)),
+          bot_action_time: getVnTimeISOString(),
           source_post_code: post.code,
           source_type: sourceType,
           auto_add_results: autoAddResults,
@@ -386,7 +387,7 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames,
           if (resolved.slot_limit && existingCeleb.slot_limit && resolved.slot_limit > existingCeleb.slot_limit) {
             logSuccess(`  🆙 TĂNG SLOT: @${username} mở thêm slot (${existingCeleb.slot_limit} -> ${resolved.slot_limit})`);
             existingCeleb.slot_limit = resolved.slot_limit;
-            existingCeleb.found_at = new Date().toISOString();
+            existingCeleb.found_at = getVnTimeISOString();
 
             newlyFoundCelebs.push({ ...existingCeleb, is_update: true });
             newCelebsFound++;
@@ -442,8 +443,8 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames,
           invite_url: resolved.invite_url,
           invite_token: inviteToken,
           slot_limit: resolved.slot_limit,
-          found_at: new Date().toISOString(),
-          bot_action_time: new Date().toISOString(),
+          found_at: getVnTimeISOString(),
+          bot_action_time: getVnTimeISOString(),
           source_post_code: 'PRE_EXISTING',
           source_type: 'Link có sẵn',
           auto_add_results: autoAddResults,
@@ -538,7 +539,7 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames,
               if (existingCeleb && resolved.slot_limit && existingCeleb.slot_limit && resolved.slot_limit > existingCeleb.slot_limit) {
                 logSuccess(`  🆙 TĂNG SLOT (IG Story): @${username} mở thêm slot (${existingCeleb.slot_limit} -> ${resolved.slot_limit})`);
                 existingCeleb.slot_limit = resolved.slot_limit;
-                existingCeleb.found_at = new Date().toISOString();
+                existingCeleb.found_at = getVnTimeISOString();
 
                 newlyFoundCelebs.push({ ...existingCeleb, is_update: true });
                 newCelebsFound++;
@@ -558,7 +559,7 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames,
               invite_url: resolved.invite_url,
               invite_token: inviteToken,
               slot_limit: resolved.slot_limit,
-              found_at: new Date().toISOString(),
+              found_at: getVnTimeISOString(),
               source_post_code: sourceText,
               source_type: sourceType,
               auto_add_results: autoAddResults,
@@ -579,7 +580,7 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames,
         logError(`  Lỗi quét Instagram Stories: ${err.message}`);
       } finally {
         // Đánh dấu thời điểm quét IG mới nhất
-        scanState.last_ig_scan = new Date().toISOString();
+        scanState.last_ig_scan = getVnTimeISOString();
         scanState.last_ig_scan_signature = dateSignature;
       }
     } else {
@@ -791,7 +792,7 @@ async function main() {
   }
 
   if (!DRY_RUN) {
-    scanState.last_scan = new Date().toISOString();
+    scanState.last_scan = getVnTimeISOString();
     celebs.forEach(c => delete c.auto_add_results);
     writeJsonFile('celebs.json', celebs);
     writeJsonFile('scan_state.json', scanState);

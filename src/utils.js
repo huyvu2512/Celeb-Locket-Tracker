@@ -122,9 +122,13 @@ function writeJsonFile(filename, data) {
 // Logging helpers
 // ============================================================
 
+function getVnTimeISOString(date = new Date()) {
+  const vnTime = new Date(date.getTime() + 7 * 60 * 60 * 1000);
+  return vnTime.toISOString().replace('Z', '+07:00');
+}
+
 function log(message) {
-  const vnTime = new Date(Date.now() + 7 * 60 * 60 * 1000);
-  const formatted = vnTime.toISOString().replace('Z', '').replace('T', ' ') + '+07:00';
+  const formatted = getVnTimeISOString().replace('T', ' ');
   console.log(`[${formatted}] ${message}`);
 }
 
@@ -271,5 +275,6 @@ module.exports = {
   delay,
   sendTelegramMessage,
   extractDropTime,
+  getVnTimeISOString,
   DATA_DIR,
 };
