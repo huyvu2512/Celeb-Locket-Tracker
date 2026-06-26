@@ -210,7 +210,7 @@ async function sendTelegramMessage(text, replyMarkup = null) {
 }
 
 async function sendDiscordMessage(c, postTimeStr, sourceTextStr) {
-  const webhookUrl = process.env.DISCORD_WEBHOOK_URL || 'https://discord.com/api/webhooks/1519909882805878796/B6NwIodpJLbSBdtkPZ9ZIWlmUU8mf3jFqRDV1ni50jb_oxRhUcOABTc3etrLjRaq5FIr';
+  const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
   if (!webhookUrl) return false;
 
   const fs = require('fs');
@@ -272,7 +272,7 @@ async function sendDiscordMessage(c, postTimeStr, sourceTextStr) {
 }
 
 async function sendDiscordAutoAddReport(c) {
-  const webhookUrl = process.env.DISCORD_WEBHOOK_URL || 'https://discord.com/api/webhooks/1519909882805878796/B6NwIodpJLbSBdtkPZ9ZIWlmUU8mf3jFqRDV1ni50jb_oxRhUcOABTc3etrLjRaq5FIr';
+  const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
   if (!webhookUrl) return false;
 
   const fs = require('fs');
@@ -335,7 +335,7 @@ async function sendDiscordAutoAddReport(c) {
 }
 
 async function sendDiscordPrepMessage(timeStr, postUrl) {
-  const webhookUrl = process.env.DISCORD_WEBHOOK_URL || 'https://discord.com/api/webhooks/1519909882805878796/B6NwIodpJLbSBdtkPZ9ZIWlmUU8mf3jFqRDV1ni50jb_oxRhUcOABTc3etrLjRaq5FIr';
+  const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
   if (!webhookUrl) return false;
 
   const embed = {
