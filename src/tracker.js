@@ -51,7 +51,7 @@ const DRY_RUN = process.argv.includes('--dry-run');
 // Logic chính
 // ============================================================
 
-async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames, isFastMode = false, includeBackup = false) {
+async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames, isFastMode = false, includeBackup = true) {
   let newCelebsFound = 0;
 
   // 1. Phục hồi Token cho Celeb bị 404 (Auto-Retry)
@@ -623,7 +623,10 @@ async function main() {
   logInfo(`Số celeb đã biết: ${knownUsernames.size}`);
   logInfo(`Số post đã quét: ${Object.keys(scanState.scanned_posts).length}`);
 
-  let newCelebsFound = await runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames);
+  // 1. CHẠY MỘT LƯỢT QUÉT ĐẦU TIÊN ĐỂ CẬP NHẬT GIỜ G (NẾU CÓ)
+  let newCelebsFound = await runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames, true, true);
+  
+  let isInSniperMode = false;
 
   // ==========================================================
   // SNIPER WAIT LOGIC
@@ -633,8 +636,9 @@ async function main() {
     const now = Date.now();
     const timeDiff = targetTime - now;
 
-    // Nếu cách giờ G dưới 15 phút và chưa qua giờ G
-    if (timeDiff > 0 && timeDiff <= 15 * 60 * 1000) {
+    // Nếu cách giờ G dưới 30 phút và chưa qua giờ G
+    if (timeDiff > 0 && timeDiff <= 30 * 60 * 1000) {
+      isInSniperMode = true;
       logInfo(`🎯 Sắp đến giờ G! Đang đợi ${Math.round(timeDiff / 1000 / 60)} phút nữa tới thời khắc vàng...`);
       await delay(timeDiff); // NGỦ ĐÔNG CHỜ ĐẾN GIỜ G
 
@@ -674,6 +678,38 @@ async function main() {
     } else if (timeDiff < 0 && timeDiff > -2 * 60 * 60 * 1000) {
       // Nếu lỡ quá giờ 2 tiếng thì bỏ qua luôn (tránh kẹt)
       scanState.sniper_completed = true;
+    }
+  }
+
+  // ==========================================================
+  // VÒNG LẶP 5 PHÚT MẶC ĐỊNH (NẾU KHÔNG VÀO SNIPER MODE)
+  // ==========================================================
+  if (!isInSniperMode) {
+    const hasInviteUrlInit = newlyFoundCelebs.some(c => c.invite_url !== null);
+    const hasSpeedAddSuccessInit = newlyFoundCelebs.some(c => c.auto_add_results && (c.auto_add_results.success || c.auto_add_results.skipped || c.auto_add_results.full));
+
+    if (!(hasInviteUrlInit || hasSpeedAddSuccessInit)) {
+      logInfo(`⏳ Kích hoạt vòng lặp quét liên tục tốc độ cao trong 5 phút...`);
+      const loopEndTime = Date.now() + 5 * 60 * 1000;
+      
+      while (Date.now() < loopEndTime) {
+        const found = await runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames, true, true);
+        
+        const hasInviteUrl = newlyFoundCelebs.some(c => c.invite_url !== null);
+        const hasSpeedAddSuccess = newlyFoundCelebs.some(c => c.auto_add_results && (c.auto_add_results.success || c.auto_add_results.skipped || c.auto_add_results.full));
+
+        if (hasInviteUrl || hasSpeedAddSuccess) {
+          logSuccess(`🎯 Đã lấy được link Invite hoặc Auto-Add thành công! Kết thúc vòng lặp sớm.`);
+          newCelebsFound += found;
+          break;
+        } else if (found > 0) {
+          logInfo(`⏳ Vừa bắt được Celeb mới nhưng bị 404. Tiếp tục vòng lặp chờ link...`);
+          newCelebsFound += found;
+        }
+
+        // Chờ 0 giây (chạy liên tục tốc độ cao)
+        await delay(0);
+      }
     }
   }
 
