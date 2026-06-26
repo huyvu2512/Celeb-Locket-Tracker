@@ -23,8 +23,10 @@ const {
   logWarning,
   logError,
   logInfo,
-  delay,
   sendTelegramMessage,
+  sendDiscordMessage,
+  sendDiscordAutoAddReport,
+  sendDiscordPrepMessage,
   extractDropTime,
   getVnTimeISOString,
 } = require('./utils');
@@ -250,6 +252,7 @@ async function runScanCycle(scanState, celebs, newlyFoundCelebs, knownUsernames,
               ]
             };
             await sendTelegramMessage(msg, replyMarkup);
+            await sendDiscordPrepMessage(timeStr, postUrl);
           }
         } else {
           // Bài quá cũ (>24h), chữ "tối nay" hoặc "nay" đã không còn hiệu lực
@@ -758,6 +761,7 @@ async function main() {
       } : null;
 
       await sendTelegramMessage(msg, replyMarkup);
+      await sendDiscordMessage(c, postTimeStr, sourceTextStr);
       await delay(500); // Tránh rate limit của Telegram khi gửi nhiều
 
       if (c.auto_add_results) {
@@ -782,6 +786,7 @@ async function main() {
           successMsg += `🕒 <b>Giờ đăng bài:</b> ${postTimeStr}\n`;
           successMsg += `⚡ <b>Giờ vồ mồi:</b> ${botTimeStr}\n`;
           await sendTelegramMessage(successMsg);
+          await sendDiscordAutoAddReport(c);
           await delay(500);
         }
       }
