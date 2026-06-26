@@ -83,10 +83,13 @@
     },
     "DZy4KXKCS7L": {
       "resolved": true
+    },
+    "DaC5wHQGBCi": {
+      "resolved": false
     }
   },
   "sniper_target_time": "2026-06-23T14:00:00.000Z",
   "sniper_trigger_code": "DZ7DWNkggGS",
   "sniper_completed": true,
-  "last_scan": "2026-06-26T17:05:44.281+07:00"
+  "last_scan": "2026-06-26T17:35:43.695+07:00"
 }
