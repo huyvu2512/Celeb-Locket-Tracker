@@ -39,33 +39,21 @@ async function autoAddFriends(newCelebs) {
 
   try {
     logInfo('🌐 Truy cập trang đăng nhập locket-dio.com...');
-    await page.goto('https://locket-dio.com/login', { waitUntil: 'networkidle2' });
+    await page.goto('https://locket-dio.com/login', { waitUntil: 'networkidle2', timeout: 30000 });
 
-    const emailInput = await page.$('input[type="email"]') || await page.$('input[placeholder*="email" i]');
-    if (emailInput) {
-      await emailInput.type(email);
-    } else {
-      await page.keyboard.type(email);
-    }
+    // Đợi form login sẵn sàng (React cần thêm thời gian mount sau khi page load)
+    const emailInput = await page.waitForSelector('input[type="email"], input[placeholder*="email" i]', { timeout: 10000 });
+    await emailInput.type(email, { delay: 30 });
 
-    const passInput = await page.$('input[type="password"]');
-    if (passInput) {
-      await passInput.type(password);
-    } else {
-      await page.keyboard.press('Tab');
-      await page.keyboard.type(password);
-    }
+    const passInput = await page.waitForSelector('input[type="password"]', { timeout: 5000 });
+    await passInput.type(password, { delay: 30 });
 
-    const loginBtn = await page.evaluateHandle(() => {
-      const btns = Array.from(document.querySelectorAll('button'));
-      return btns.find(b => b.textContent.includes('Đăng Nhập'));
+    // Đợi và click nút Đăng Nhập
+    await page.waitForFunction(() => Array.from(document.querySelectorAll('button')).some(b => b.textContent.includes('Đăng Nhập') && !b.disabled), { timeout: 5000 });
+    await page.evaluate(() => {
+      const btn = Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes('Đăng Nhập'));
+      if (btn) btn.click();
     });
-    
-    if (loginBtn) {
-      await loginBtn.click();
-    } else {
-      await page.keyboard.press('Enter');
-    }
 
     logInfo('⏳ Chờ load vào giao diện chính...');
     await page.waitForFunction(() => {
@@ -86,14 +74,21 @@ async function autoAddFriends(newCelebs) {
         const searchInputSelector = 'input[placeholder="Thêm một người bạn mới..."]';
         await page.waitForSelector(searchInputSelector, { timeout: 5000 });
 
-        // Xóa text cũ nếu có
+        // Xoá text cũ nếu có
         await page.click(searchInputSelector, { clickCount: 3 });
         await page.keyboard.press('Backspace');
 
-        // Nhập username mới với delay chân thực
-        await delay(1000);
-        await page.type(searchInputSelector, celeb.username, { delay: 150 });
-        await delay(1500); // Đợi React nhận data và hiển thị nút tìm kiếm
+        // Nhập username nhanh (delay 30ms/ký tự thay vì 150ms)
+        await page.type(searchInputSelector, celeb.username, { delay: 30 });
+
+        // Đợi nút Tìm kiếm khả dụng (thay cho delay cứng 1500ms)
+        try {
+          await page.waitForFunction(() => {
+            const btns = Array.from(document.querySelectorAll('button'));
+            const searchBtn = btns.find(b => b.textContent.includes('Tìm kiếm'));
+            return searchBtn && !searchBtn.disabled;
+          }, { timeout: 3000 });
+        } catch (e) { /* nếu không hiện thì thử luôn */ }
         
         // Bấm nút tìm kiếm
         await page.evaluate(() => {
@@ -116,7 +111,7 @@ async function autoAddFriends(newCelebs) {
           continue; // Sang celeb tiếp theo
         }
         
-        await delay(2000); // Thêm delay trước khi click kết bạn để giống người thật
+        // Đợi kết quả hiển thị (waitForFunction đã đảm bảo UI sẵn sàng, không cần delay thêm)
 
         // Kiểm tra trạng thái các nút
         const checkResult = await page.evaluate(() => {
